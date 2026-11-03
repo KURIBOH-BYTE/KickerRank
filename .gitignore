@@ -1,0 +1,13 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Lokale Datenbank (wird beim Start automatisch erstellt)
+kicker.db
+
+# Editor / macOS
+.vscode/
+.idea/
+.DS_Store

@@ -1,0 +1,85 @@
+:root {
+  --gruen: #1f6f43;
+  --gruen-hell: #e7f3ec;
+  --rot: #b3261e;
+  --text: #1c1c1c;
+  --grau: #6b6b6b;
+  --linie: #dcdcdc;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: var(--text);
+  background: #f6f6f4;
+}
+
+header {
+  background: var(--gruen);
+  color: #fff;
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+header h1 { margin: 0; font-size: 1.4rem; }
+
+nav { display: flex; gap: 8px; }
+.tab {
+  background: transparent;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+.tab.aktiv { background: #fff; color: var(--gruen); }
+
+main { max-width: 760px; margin: 24px auto; padding: 0 16px; }
+.versteckt { display: none; }
+
+h2 { margin-top: 0; }
+h3 { margin-top: 32px; }
+
+table { width: 100%; border-collapse: collapse; background: #fff; }
+th, td { padding: 10px 12px; border-bottom: 1px solid var(--linie); text-align: left; }
+th { font-size: 0.85rem; color: var(--grau); }
+.zahl { text-align: right; font-variant-numeric: tabular-nums; }
+tbody tr:first-child td { font-weight: 600; }
+
+input, select, button {
+  font: inherit;
+  padding: 8px 10px;
+  border: 1px solid var(--linie);
+  border-radius: 6px;
+}
+button { background: var(--gruen); color: #fff; border-color: var(--gruen); cursor: pointer; }
+button.sekundaer { background: #fff; color: var(--gruen); }
+button.gefahr { background: #fff; color: var(--rot); border-color: var(--rot); }
+
+.zeile { display: flex; gap: 8px; flex-wrap: wrap; }
+.zeile input { flex: 1; min-width: 160px; }
+
+.duell { display: flex; align-items: flex-end; gap: 12px; margin-bottom: 16px; }
+.seite { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+.seite label { font-size: 0.85rem; color: var(--grau); }
+.seite input { width: 80px; font-size: 1.4rem; text-align: center; }
+.vs { font-size: 1.6rem; font-weight: 700; padding-bottom: 8px; }
+
+.karte {
+  background: #fff;
+  border: 1px solid var(--linie);
+  border-radius: 8px;
+  padding: 16px;
+}
+.karte .resultat { font-size: 1.2rem; font-weight: 600; }
+.karte .info { color: var(--grau); margin: 4px 0 12px; }
+.karte .aktionen { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.karte .aktionen input { width: 64px; }
+
+.meldung { min-height: 1.4em; }
+.meldung.ok { color: var(--gruen); }
+.meldung.fehler { color: var(--rot); }
+.plus { color: var(--gruen); }
+.minus { color: var(--rot); }
