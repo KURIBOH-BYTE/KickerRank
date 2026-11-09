@@ -3,65 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Kicker-Liga</title>
-  <link rel="stylesheet" href="css/style.css">
+  <title>KickerRank</title>
 </head>
 <body>
-  <header>
-    <h1>Kicker-Liga</h1>
-    <nav>
-      <button class="tab aktiv" data-bereich="rangliste">Rangliste</button>
-      <button class="tab" data-bereich="spiel">Spiel erfassen</button>
-    </nav>
-  </header>
-
-  <main>
-    <!-- Bereich 1: Rangliste + Spieler hinzufügen -->
-    <section id="rangliste" class="bereich">
-      <h2>Rangliste</h2>
-      <table>
-        <thead>
-          <tr><th>#</th><th>Name</th><th>Abteilung</th><th class="zahl">Elo</th><th class="zahl">Spiele</th></tr>
-        </thead>
-        <tbody id="rangliste-zeilen"></tbody>
-      </table>
-
-      <h3>Spieler hinzufügen</h3>
-      <form id="spieler-form" class="zeile">
-        <input id="spieler-name" type="text" placeholder="Name" maxlength="100" required>
-        <select id="spieler-abteilung"></select>
-        <button type="submit">Hinzufügen</button>
-      </form>
-      <p class="meldung" id="spieler-meldung"></p>
-    </section>
-
-    <!-- Bereich 2: Spiel erfassen + letztes Spiel -->
-    <section id="spiel" class="bereich versteckt">
-      <h2>Spiel erfassen</h2>
-      <form id="spiel-form">
-        <div class="duell">
-          <div class="seite">
-            <label for="spieler-a">Spieler A</label>
-            <select id="spieler-a" class="spieler-auswahl"></select>
-            <input id="tore-a" type="number" min="0" max="10" value="10" aria-label="Tore A">
-          </div>
-          <span class="vs">:</span>
-          <div class="seite">
-            <label for="spieler-b">Spieler B</label>
-            <select id="spieler-b" class="spieler-auswahl"></select>
-            <input id="tore-b" type="number" min="0" max="10" value="0" aria-label="Tore B">
-          </div>
-        </div>
-        <button type="submit">Spiel speichern</button>
-      </form>
-      <p class="meldung" id="spiel-meldung"></p>
-
-      <h3>Letztes Spiel</h3>
-      <div id="letztes-spiel" class="karte"></div>
-    </section>
-  </main>
-
+  <h1>KickerRank</h1>
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-  <script src="js/app.js"></script>
+  <script src="js/main.js"></script>
 </body>
 </html>
