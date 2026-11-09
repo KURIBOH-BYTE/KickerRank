@@ -4,7 +4,7 @@ Web-Applikation für Tischkicker-Spiele (1 vs 1) im Büro mit einer Elo-Ranglist
 
 Projektarbeit im Modul *Webbasierte Anwendungen*, FHNW, HS2026.
 
-**Gruppe:** _  Fabrice Balzan, Ryo Flückiger, Ryan Wolf_
+**Gruppe:**   Fabrice Balzan, Ryo Flückiger, Ryan Wolf
 
 ---
 
