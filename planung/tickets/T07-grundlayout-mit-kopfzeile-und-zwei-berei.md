@@ -19,7 +19,7 @@ Die Seite hat einen Kopf mit Navigation und zwei Bereiche: Rangliste und Spiel e
 - [ ] Der aktive Button ist hervorgehoben
 
 ## Tests
-- [ ] Manueller Testfall M1 in `docs/manuelle_tests.md` anlegen und durchführen
+- [ ] Manueller Testfall M1 in `tests/manuelle_tests.md` anlegen und durchführen
 
 ## Hinweise
 Ähnlich wie eure Übung «Menüpunkte» und die jQuery-Übung mit `.on("click", ...)`.
