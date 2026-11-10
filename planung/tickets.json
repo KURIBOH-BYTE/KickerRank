@@ -1,0 +1,498 @@
+{
+ "meilensteine": [
+  "M0 · Setup und Planung",
+  "M1 · Presentation Layer",
+  "M2 · Web/REST Service Layer",
+  "M3 · Business Service Layer",
+  "M4 · Persistence Layer",
+  "M5 · Erweiterungen (volle Punktzahl)",
+  "M6 · Abgabe und Verteidigung"
+ ],
+ "tickets": [
+  {
+   "id": "T01",
+   "titel": "T01 · Referenzcode sichern und Projekt-Skelett aufsetzen",
+   "meilenstein": "M0 · Setup und Planung",
+   "labels": [
+    "Setup"
+   ],
+   "datei": "tickets/T01-referenzcode-sichern-und-projekt-skelett.md",
+   "abh": []
+  },
+  {
+   "id": "T02",
+   "titel": "T02 · Entwicklungsumgebung für alle Gruppenmitglieder",
+   "meilenstein": "M0 · Setup und Planung",
+   "labels": [
+    "Setup"
+   ],
+   "datei": "tickets/T02-entwicklungsumgebung-fuer-alle-gruppenmi.md",
+   "abh": [
+    "T01"
+   ]
+  },
+  {
+   "id": "T03",
+   "titel": "T03 · Test-Setup mit pytest einrichten",
+   "meilenstein": "M0 · Setup und Planung",
+   "labels": [
+    "Setup",
+    "Test"
+   ],
+   "datei": "tickets/T03-test-setup-mit-pytest-einrichten.md",
+   "abh": [
+    "T01"
+   ]
+  },
+  {
+   "id": "T04",
+   "titel": "T04 · Service-Beschreibung im Schema der Übung 1 erstellen",
+   "meilenstein": "M0 · Setup und Planung",
+   "labels": [
+    "Doku",
+    "Service"
+   ],
+   "datei": "tickets/T04-service-beschreibung-im-schema-der-uebun.md",
+   "abh": []
+  },
+  {
+   "id": "T05",
+   "titel": "T05 · Datenmodell und ER-Diagramm dokumentieren",
+   "meilenstein": "M0 · Setup und Planung",
+   "labels": [
+    "Doku",
+    "Persistence"
+   ],
+   "datei": "tickets/T05-datenmodell-und-er-diagramm-dokumentiere.md",
+   "abh": []
+  },
+  {
+   "id": "T06",
+   "titel": "T06 · Arbeitsweise mit Git und Tickets festlegen",
+   "meilenstein": "M0 · Setup und Planung",
+   "labels": [
+    "Setup"
+   ],
+   "datei": "tickets/T06-arbeitsweise-mit-git-und-tickets-festleg.md",
+   "abh": [
+    "T02"
+   ]
+  },
+  {
+   "id": "T07",
+   "titel": "T07 · Grundlayout mit Kopfzeile und zwei Bereichen",
+   "meilenstein": "M1 · Presentation Layer",
+   "labels": [
+    "Presentation"
+   ],
+   "datei": "tickets/T07-grundlayout-mit-kopfzeile-und-zwei-berei.md",
+   "abh": [
+    "T01"
+   ]
+  },
+  {
+   "id": "T08",
+   "titel": "T08 · Rangliste aus JSON-Testdaten anzeigen",
+   "meilenstein": "M1 · Presentation Layer",
+   "labels": [
+    "Presentation"
+   ],
+   "datei": "tickets/T08-rangliste-aus-json-testdaten-anzeigen.md",
+   "abh": [
+    "T07"
+   ]
+  },
+  {
+   "id": "T09",
+   "titel": "T09 · Formular «Spiel erfassen» mit Eingabeprüfung im Browser",
+   "meilenstein": "M1 · Presentation Layer",
+   "labels": [
+    "Presentation"
+   ],
+   "datei": "tickets/T09-formular-spiel-erfassen-mit-eingabepruef.md",
+   "abh": [
+    "T08"
+   ]
+  },
+  {
+   "id": "T10",
+   "titel": "T10 · Bereich «Spieler hinzufügen» und Box «Letztes Spiel»",
+   "meilenstein": "M1 · Presentation Layer",
+   "labels": [
+    "Presentation"
+   ],
+   "datei": "tickets/T10-bereich-spieler-hinzufuegen-und-box-letz.md",
+   "abh": [
+    "T07"
+   ]
+  },
+  {
+   "id": "T11",
+   "titel": "T11 · Messages (Pydantic-Modelle) für Spieler und Spiel",
+   "meilenstein": "M2 · Web/REST Service Layer",
+   "labels": [
+    "Service"
+   ],
+   "datei": "tickets/T11-messages-pydantic-modelle-fuer-spieler-u.md",
+   "abh": [
+    "T04"
+   ]
+  },
+  {
+   "id": "T12",
+   "titel": "T12 · Endpunkte Rangliste und Abteilungen (Daten im Speicher)",
+   "meilenstein": "M2 · Web/REST Service Layer",
+   "labels": [
+    "Service"
+   ],
+   "datei": "tickets/T12-endpunkte-rangliste-und-abteilungen-date.md",
+   "abh": [
+    "T11",
+    "T03"
+   ]
+  },
+  {
+   "id": "T13",
+   "titel": "T13 · Endpunkt Spieler anlegen",
+   "meilenstein": "M2 · Web/REST Service Layer",
+   "labels": [
+    "Service"
+   ],
+   "datei": "tickets/T13-endpunkt-spieler-anlegen.md",
+   "abh": [
+    "T12"
+   ]
+  },
+  {
+   "id": "T14",
+   "titel": "T14 · Endpunkte Spiel erfassen und letztes Spiel",
+   "meilenstein": "M2 · Web/REST Service Layer",
+   "labels": [
+    "Service"
+   ],
+   "datei": "tickets/T14-endpunkte-spiel-erfassen-und-letztes-spi.md",
+   "abh": [
+    "T13"
+   ]
+  },
+  {
+   "id": "T15",
+   "titel": "T15 · Endpunkte Spiel korrigieren und löschen",
+   "meilenstein": "M2 · Web/REST Service Layer",
+   "labels": [
+    "Service"
+   ],
+   "datei": "tickets/T15-endpunkte-spiel-korrigieren-und-loeschen.md",
+   "abh": [
+    "T14"
+   ]
+  },
+  {
+   "id": "T16",
+   "titel": "T16 · Frontend an die echte API anbinden: Rangliste und Spieler",
+   "meilenstein": "M2 · Web/REST Service Layer",
+   "labels": [
+    "Presentation",
+    "Service"
+   ],
+   "datei": "tickets/T16-frontend-an-die-echte-api-anbinden-rangl.md",
+   "abh": [
+    "T08",
+    "T10",
+    "T13"
+   ]
+  },
+  {
+   "id": "T17",
+   "titel": "T17 · Frontend an die echte API anbinden: Spiele",
+   "meilenstein": "M2 · Web/REST Service Layer",
+   "labels": [
+    "Presentation",
+    "Service"
+   ],
+   "datei": "tickets/T17-frontend-an-die-echte-api-anbinden-spiel.md",
+   "abh": [
+    "T09",
+    "T15",
+    "T16"
+   ]
+  },
+  {
+   "id": "T18",
+   "titel": "T18 · Elo-Berechnung",
+   "meilenstein": "M3 · Business Service Layer",
+   "labels": [
+    "Business",
+    "Test"
+   ],
+   "datei": "tickets/T18-elo-berechnung.md",
+   "abh": [
+    "T03"
+   ]
+  },
+  {
+   "id": "T19",
+   "titel": "T19 · Fehlerklasse und einheitliche Fehlerantwort",
+   "meilenstein": "M3 · Business Service Layer",
+   "labels": [
+    "Business",
+    "Service"
+   ],
+   "datei": "tickets/T19-fehlerklasse-und-einheitliche-fehlerantw.md",
+   "abh": [
+    "T12"
+   ]
+  },
+  {
+   "id": "T20",
+   "titel": "T20 · SpielerService mit Prüfregeln",
+   "meilenstein": "M3 · Business Service Layer",
+   "labels": [
+    "Business",
+    "Test"
+   ],
+   "datei": "tickets/T20-spielerservice-mit-pruefregeln.md",
+   "abh": [
+    "T19"
+   ]
+  },
+  {
+   "id": "T21",
+   "titel": "T21 · SpielService: Spiel erfassen mit Regeln und Elo",
+   "meilenstein": "M3 · Business Service Layer",
+   "labels": [
+    "Business",
+    "Test"
+   ],
+   "datei": "tickets/T21-spielservice-spiel-erfassen-mit-regeln-u.md",
+   "abh": [
+    "T18",
+    "T20"
+   ]
+  },
+  {
+   "id": "T22",
+   "titel": "T22 · SpielService: Korrigieren und Löschen nur beim neusten Spiel",
+   "meilenstein": "M3 · Business Service Layer",
+   "labels": [
+    "Business",
+    "Test"
+   ],
+   "datei": "tickets/T22-spielservice-korrigieren-und-loeschen-nu.md",
+   "abh": [
+    "T21"
+   ]
+  },
+  {
+   "id": "T23",
+   "titel": "T23 · DTOs zwischen Business und Service Layer",
+   "meilenstein": "M3 · Business Service Layer",
+   "labels": [
+    "Business",
+    "Service"
+   ],
+   "datei": "tickets/T23-dtos-zwischen-business-und-service-layer.md",
+   "abh": [
+    "T22"
+   ]
+  },
+  {
+   "id": "T24",
+   "titel": "T24 · Datenbankverbindung mit SQLAlchemy",
+   "meilenstein": "M4 · Persistence Layer",
+   "labels": [
+    "Persistence",
+    "Test"
+   ],
+   "datei": "tickets/T24-datenbankverbindung-mit-sqlalchemy.md",
+   "abh": [
+    "T05",
+    "T03"
+   ]
+  },
+  {
+   "id": "T25",
+   "titel": "T25 · Entitäten Spieler und Spiel",
+   "meilenstein": "M4 · Persistence Layer",
+   "labels": [
+    "Persistence",
+    "Test"
+   ],
+   "datei": "tickets/T25-entitaeten-spieler-und-spiel.md",
+   "abh": [
+    "T24"
+   ]
+  },
+  {
+   "id": "T26",
+   "titel": "T26 · Data Access: Repositories für Spieler und Spiele",
+   "meilenstein": "M4 · Persistence Layer",
+   "labels": [
+    "Persistence",
+    "Test"
+   ],
+   "datei": "tickets/T26-data-access-repositories-fuer-spieler-un.md",
+   "abh": [
+    "T25"
+   ]
+  },
+  {
+   "id": "T27",
+   "titel": "T27 · Business Layer auf die Datenbank umstellen",
+   "meilenstein": "M4 · Persistence Layer",
+   "labels": [
+    "Business",
+    "Persistence",
+    "Test"
+   ],
+   "datei": "tickets/T27-business-layer-auf-die-datenbank-umstell.md",
+   "abh": [
+    "T23",
+    "T26"
+   ]
+  },
+  {
+   "id": "T28",
+   "titel": "T28 · Demo-Daten beim ersten Start",
+   "meilenstein": "M4 · Persistence Layer",
+   "labels": [
+    "Persistence"
+   ],
+   "datei": "tickets/T28-demo-daten-beim-ersten-start.md",
+   "abh": [
+    "T27"
+   ]
+  },
+  {
+   "id": "T29",
+   "titel": "T29 · Erweiterung: Spielverlauf",
+   "meilenstein": "M5 · Erweiterungen (volle Punktzahl)",
+   "labels": [
+    "Erweiterung"
+   ],
+   "datei": "tickets/T29-erweiterung-spielverlauf.md",
+   "abh": [
+    "T27"
+   ]
+  },
+  {
+   "id": "T30",
+   "titel": "T30 · Erweiterung: Siegchance vor dem Spiel",
+   "meilenstein": "M5 · Erweiterungen (volle Punktzahl)",
+   "labels": [
+    "Erweiterung"
+   ],
+   "datei": "tickets/T30-erweiterung-siegchance-vor-dem-spiel.md",
+   "abh": [
+    "T27"
+   ]
+  },
+  {
+   "id": "T31",
+   "titel": "T31 · Erweiterung: Spieler bearbeiten und löschen",
+   "meilenstein": "M5 · Erweiterungen (volle Punktzahl)",
+   "labels": [
+    "Erweiterung"
+   ],
+   "datei": "tickets/T31-erweiterung-spieler-bearbeiten-und-loesc.md",
+   "abh": [
+    "T27"
+   ]
+  },
+  {
+   "id": "T32",
+   "titel": "T32 · Erweiterung (optional): Spielerprofil mit Elo-Verlauf",
+   "meilenstein": "M5 · Erweiterungen (volle Punktzahl)",
+   "labels": [
+    "Erweiterung"
+   ],
+   "datei": "tickets/T32-erweiterung-optional-spielerprofil-mit-e.md",
+   "abh": [
+    "T29"
+   ]
+  },
+  {
+   "id": "T33",
+   "titel": "T33 · README fertigstellen",
+   "meilenstein": "M6 · Abgabe und Verteidigung",
+   "labels": [
+    "Doku"
+   ],
+   "datei": "tickets/T33-readme-fertigstellen.md",
+   "abh": [
+    "T27"
+   ]
+  },
+  {
+   "id": "T34",
+   "titel": "T34 · Beschreibung für die Abgabe",
+   "meilenstein": "M6 · Abgabe und Verteidigung",
+   "labels": [
+    "Doku"
+   ],
+   "datei": "tickets/T34-beschreibung-fuer-die-abgabe.md",
+   "abh": [
+    "T05",
+    "T27"
+   ]
+  },
+  {
+   "id": "T35",
+   "titel": "T35 · Reflexion schreiben",
+   "meilenstein": "M6 · Abgabe und Verteidigung",
+   "labels": [
+    "Doku"
+   ],
+   "datei": "tickets/T35-reflexion-schreiben.md",
+   "abh": [
+    "T34"
+   ]
+  },
+  {
+   "id": "T36",
+   "titel": "T36 · Quellen- und Hilfsmittelverzeichnis",
+   "meilenstein": "M6 · Abgabe und Verteidigung",
+   "labels": [
+    "Doku"
+   ],
+   "datei": "tickets/T36-quellen-und-hilfsmittelverzeichnis.md",
+   "abh": []
+  },
+  {
+   "id": "T37",
+   "titel": "T37 · Abgabetest auf einem fremden Rechner",
+   "meilenstein": "M6 · Abgabe und Verteidigung",
+   "labels": [
+    "Test"
+   ],
+   "datei": "tickets/T37-abgabetest-auf-einem-fremden-rechner.md",
+   "abh": [
+    "T33"
+   ]
+  },
+  {
+   "id": "T38",
+   "titel": "T38 · Präsentation vorbereiten",
+   "meilenstein": "M6 · Abgabe und Verteidigung",
+   "labels": [
+    "Verteidigung"
+   ],
+   "datei": "tickets/T38-praesentation-vorbereiten.md",
+   "abh": [
+    "T27"
+   ]
+  },
+  {
+   "id": "T39",
+   "titel": "T39 · Verteidigung üben: jedes Mitglied erklärt jede Schicht",
+   "meilenstein": "M6 · Abgabe und Verteidigung",
+   "labels": [
+    "Verteidigung"
+   ],
+   "datei": "tickets/T39-verteidigung-ueben-jedes-mitglied-erklae.md",
+   "abh": [
+    "T27"
+   ]
+  }
+ ]
+}
