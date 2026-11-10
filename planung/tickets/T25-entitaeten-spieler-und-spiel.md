@@ -15,7 +15,7 @@ Die beiden Entitäten aus dem ER-Diagramm sind als SQLAlchemy-Klassen umgesetzt.
 - [ ] `gewinner` als `@property` aus den Toren
 
 ## Akzeptanzkriterien
-- [ ] Tabellen in `kicker.db` entsprechen dem ER-Diagramm (Prüfen mit DB Browser for SQLite)
+- [ ] Tabellen in der MySQL-Datenbank `kickerrank` entsprechen dem ER-Diagramm (Prüfen mit `SHOW TABLES;` und `DESCRIBE player;` oder MySQL Workbench)
 
 ## Tests
 - [ ] `test_spieler_speichern_und_lesen`
@@ -24,7 +24,7 @@ Die beiden Entitäten aus dem ER-Diagramm sind als SQLAlchemy-Klassen umgesetzt.
 - [ ] `test_name_ist_eindeutig` (IntegrityError)
 
 ## Hinweise
-Die doppelte Beziehung braucht `foreign_keys=...`, sonst weiss SQLAlchemy nicht, welcher Fremdschlüssel gemeint ist.
+Die doppelte Beziehung braucht `foreign_keys=...`, sonst weiss SQLAlchemy nicht, welcher Fremdschlüssel gemeint ist. MySQL verlangt bei jeder Textspalte eine Länge, also `String(100)` statt `String`. Namen auf Englisch gemäss T05.
 
 ## Definition of Done
 - [ ] Akzeptanzkriterien erfüllt

@@ -11,7 +11,7 @@ Beim Erfassen eines Spiels werden alle Regeln geprüft und die Elo beider Spiele
 ## Aufgaben
 - [ ] `business/spiel_service.py` mit `spiel_erfassen(...)`
 - [ ] Regeln: zwei verschiedene, existierende Spieler; Tore 0–10; genau ein Spieler hat 10
-- [ ] `elo_a_vorher`, `elo_b_vorher` und `elo_aenderung` im Spiel speichern, Elo beider Spieler anpassen
+- [ ] Wertung vor dem Spiel und Punkteänderung im Spiel speichern, neue Wertungen mit `new_ratings([a.rating], [b.rating], a_wins)` aus `business/elo.py` berechnen
 - [ ] Endpunkt `POST /api/spiele` ruft nur noch den Service auf
 
 ## Akzeptanzkriterien

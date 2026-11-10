@@ -12,16 +12,17 @@ Projektarbeit im Modul *Webbasierte Anwendungen*, FHNW, HS2026.
 
 1. [Szenario](#szenario)
 2. [Installation und Start](#installation-und-start)
-3. [Tests ausführen](#tests-ausführen)
-4. [Ordnerstruktur](#ordnerstruktur)
-5. [Architektur](#architektur)
-6. [Datenmodell](#datenmodell)
-7. [Business-Regeln](#business-regeln)
-8. [REST-API](#rest-api)
-9. [Testen](#testen)
-10. [Designentscheidungen](#designentscheidungen)
-11. [Mögliche Erweiterungen](#mögliche-erweiterungen)
-12. [Quellen und Hilfsmittel](#quellen-und-hilfsmittel)
+3. [MySQL einrichten](#mysql-einrichten)
+4. [Tests ausführen](#tests-ausführen)
+5. [Ordnerstruktur](#ordnerstruktur)
+6. [Architektur](#architektur)
+7. [Datenmodell](#datenmodell)
+8. [Business-Regeln](#business-regeln)
+9. [REST-API](#rest-api)
+10. [Testen](#testen)
+11. [Designentscheidungen](#designentscheidungen)
+12. [Mögliche Erweiterungen](#mögliche-erweiterungen)
+13. [Quellen und Hilfsmittel](#quellen-und-hilfsmittel)
 
 ---
 
@@ -77,7 +78,38 @@ Danach im Browser öffnen: **<http://localhost:8000>**
 
 - Stoppen: `Ctrl + C` im Terminal.
 - Die Oberfläche lädt jQuery von einem CDN, braucht also eine Internetverbindung.
-- Ab Meilenstein M4: Beim ersten Start wird die Datenbank `kicker.db` (SQLite) automatisch angelegt. Zurücksetzen: `kicker.db` löschen und neu starten.
+- Ab Meilenstein M4 braucht die App eine laufende MySQL-Datenbank, siehe [MySQL einrichten](#mysql-einrichten).
+
+## MySQL einrichten
+
+Wie im Skript (Block 3) vorgesehen, speichert die App ihre Daten in **MySQL**. Benötigt ab Meilenstein M4.
+
+**1. MySQL installieren und starten** (einmalig)
+
+```bash
+brew install mysql             # Mac
+brew services start mysql
+```
+
+Unter Windows: «MySQL Installer» von <https://dev.mysql.com/downloads/installer/>.
+
+**2. Datenbank und Benutzer anlegen** (einmalig)
+
+```bash
+mysql -u root < docs/setup.sql
+```
+
+`docs/setup.sql` legt die Datenbank `kickerrank` und den Benutzer `kicker` an. Die Tabellen erstellt die App beim ersten Start selbst.
+
+**3. Verbindung**
+
+Die Verbindung steht in `config.py`:
+
+```python
+DATABASE_URL = "mysql+pymysql://kicker:kicker@localhost:3306/kickerrank"
+```
+
+Die automatischen Tests brauchen **keinen** MySQL-Server, sie verwenden eine SQLite-Datenbank im Arbeitsspeicher.
 
 ## Tests ausführen
 
@@ -98,8 +130,11 @@ Das ist die **Zielstruktur**. Die Dateien entstehen nach und nach mit den Ticket
 ```
 KickerRank/
 ├── main.py                     # Startpunkt: FastAPI-App, Router, Fehlerbehandlung
-├── requirements.txt            # Abhängigkeiten (FastAPI, Uvicorn, SQLAlchemy, pytest, httpx)
+├── config.py                   # Einstellungen, z. B. DATABASE_URL für MySQL
+├── requirements.txt            # Abhängigkeiten (FastAPI, Uvicorn, SQLAlchemy, PyMySQL, pytest, httpx)
 ├── README.md                   # Diese Beschreibung
+│
+├── docs/                       # Dokumentation, setup.sql für MySQL
 │
 ├── tests/                      # Automatische Tests (pytest)
 │   └── test_*.py
@@ -155,7 +190,7 @@ Die Anwendung ist in vier Schichten aufgeteilt. Jede Schicht ruft nur die Schich
 └───────────────────────┬──────────────────────┘
                         │  SQL
                  ┌──────┴──────┐
-                 │   SQLite    │  kicker.db
+                 │    MySQL    │  kickerrank
                  └─────────────┘
 ```
 
@@ -323,7 +358,8 @@ Content-Type: application/json
 - **Der Gewinner wird nicht gespeichert.** Er ergibt sich aus den Toren, so können sich keine Daten widersprechen.
 - **DTOs statt Entities nach oben:** Der Service Layer kennt keine SQLAlchemy-Objekte. Änderungen an der Datenbank wirken sich nicht direkt auf das API aus.
 - **Repositories (Data Access):** Alle Abfragen liegen in der Persistenzschicht. Der Business Layer enthält kein SQL.
-- **SQLite statt MySQL:** SQLite braucht keine Installation, das Projekt läuft also sofort. Durch SQLAlchemy ist ein Wechsel auf MySQL eine Änderung an `DATABASE_URL` in `persistence/database.py` (plus Treiber `pymysql`).
+- **MySQL gemäss Skript:** Die Daten liegen wie in den Kursunterlagen vorgesehen in MySQL (Treiber `pymysql`). Dank SQLAlchemy steckt die Datenbank nur in einer Zeile (`DATABASE_URL` in `config.py`).
+- **Tests mit SQLite im Arbeitsspeicher:** Die automatischen Tests laufen ohne MySQL-Server, sind schnell und starten jedes Mal mit einer leeren Datenbank.
 - **Grenze des Modells:** 2 vs 2 würde weitere Spalten oder eine dritte Tabelle (Spielteilnahme) erfordern.
 
 ---

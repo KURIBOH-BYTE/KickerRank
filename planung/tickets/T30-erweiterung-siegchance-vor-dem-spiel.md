@@ -9,7 +9,7 @@
 Nach Auswahl der beiden Spieler zeigt das Formular «Lisa gewinnt mit 64 %».
 
 ## Aufgaben
-- [ ] Business: `prognose(spieler_a_id, spieler_b_id)` nutzt `erwartung()`
+- [ ] Business: `prognose(spieler_a_id, spieler_b_id)` nutzt `win_probability()` aus `business/elo.py`
 - [ ] Service: `GET /api/prognose?a=1&b=2`
 - [ ] Präsentation: bei jeder Änderung eines Dropdowns abfragen und anzeigen
 
