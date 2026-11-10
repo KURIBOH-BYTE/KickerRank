@@ -361,6 +361,13 @@ Content-Type: application/json
 - **MySQL gemäss Skript:** Die Daten liegen wie in den Kursunterlagen vorgesehen in MySQL (Treiber `pymysql`). Dank SQLAlchemy steckt die Datenbank nur in einer Zeile (`DATABASE_URL` in `config.py`).
 - **Tests mit SQLite im Arbeitsspeicher:** Die automatischen Tests laufen ohne MySQL-Server, sind schnell und starten jedes Mal mit einer leeren Datenbank.
 - **Grenze des Modells:** 2 vs 2 würde weitere Spalten oder eine dritte Tabelle (Spielteilnahme) erfordern.
+- **Responsive Design für Handy und Desktop:** Die Oberfläche ist bewusst so gebaut, dass sie auf allen Bildschirmgrössen funktioniert:
+  - Abstände und Schriftgrössen in **`rem` statt `px`**. Stellt jemand im Browser oder auf dem Handy eine grössere Schrift ein, wächst das Layout mit (Barrierefreiheit). Rahmenlinien und Rundungen bleiben in `px`, weil sie dünn und gleichmässig bleiben sollen.
+  - Der Inhalt hat eine **`max-width`** statt einer festen Breite: auf grossen Bildschirmen begrenzt, auf dem Handy volle Breite.
+  - Der Header nutzt **`flex-wrap`**: Auf schmalen Bildschirmen rutscht die Navigation unter den Titel, statt gequetscht zu werden.
+  - Eine **Media Query** (`max-width: 500px`) verkleinert Titel und Abstände auf dem Handy.
+  - **Prozentwerte für Abstände wurden verworfen**, weil sie sich nach der Breite des Elternelements richten und dadurch auf grossen Bildschirmen zu gross und auf dem Handy zu klein werden.
+- **Sprache:** Code (Variablen, Funktionen, Tabellen) und Oberfläche sind auf **Englisch**, die Dokumentation (README, Tickets, Beschreibung) auf **Deutsch**, weil Aufgabenstellung und Bewertung deutschsprachig sind.
 
 ---
 
