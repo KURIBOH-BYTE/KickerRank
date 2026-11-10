@@ -298,7 +298,7 @@
   },
   {
    "id": "T24",
-   "titel": "T24 · Datenbankverbindung mit SQLAlchemy",
+   "titel": "T24 · Datenbankverbindung mit SQLAlchemy und MySQL",
    "meilenstein": "M4 · Persistence Layer",
    "labels": [
     "Persistence",

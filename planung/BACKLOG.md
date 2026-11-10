@@ -1,6 +1,6 @@
 # Backlog KickerRank
 
-39 Tickets in 7 Meilensteinen, geschätzt 84.5 Stunden für die ganze Gruppe.
+39 Tickets in 7 Meilensteinen, geschätzt 86 Stunden für die ganze Gruppe.
 Die Reihenfolge folgt der Vorlesung: zuerst Präsentation (Übung 1), dann Service, Business und Persistenz.
 Nach M2 läuft die App mit Daten im Speicher, nach M4 mit Datenbank. Damit ist die Mindestanforderung erfüllt. M5 bringt die volle Punktzahl.
 
@@ -59,11 +59,11 @@ Summe: 13.5 h
 
 ## M4 · Persistence Layer
 
-Summe: 11.5 h
+Summe: 13 h
 
 | Ticket | Titel | Typ | h | Abhängig von |
 |---|---|---|---|---|
-| T24 | [Datenbankverbindung mit SQLAlchemy](tickets/T24-datenbankverbindung-mit-sqlalchemy.md) | Persistence, Test | 2 | T05, T03 |
+| T24 | [Datenbankverbindung mit SQLAlchemy und MySQL](tickets/T24-datenbankverbindung-mit-sqlalchemy.md) | Persistence, Test | 3.5 | T05, T03 |
 | T25 | [Entitäten Spieler und Spiel](tickets/T25-entitaeten-spieler-und-spiel.md) | Persistence, Test | 3 | T24 |
 | T26 | [Data Access: Repositories für Spieler und Spiele](tickets/T26-data-access-repositories-fuer-spieler-un.md) | Persistence, Test | 2.5 | T25 |
 | T27 | [Business Layer auf die Datenbank umstellen](tickets/T27-business-layer-auf-die-datenbank-umstell.md) | Business, Persistence, Test | 3 | T23, T26 |

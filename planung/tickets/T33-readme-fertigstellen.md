@@ -9,7 +9,7 @@
 Jemand Fremdes kann das Projekt nur mit dem README starten und verstehen.
 
 ## Aufgaben
-- [ ] Startanleitung, Ordnerstruktur, API, Tests ausführen
+- [ ] Startanleitung, MySQL einrichten, Ordnerstruktur, API, Tests ausführen
 - [ ] Gruppennamen
 
 ## Akzeptanzkriterien
