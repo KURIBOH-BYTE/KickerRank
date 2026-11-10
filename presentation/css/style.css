@@ -1,0 +1,50 @@
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  background: #f4f6f5;
+}
+
+header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  background: #1b5e20;
+  color: white;
+}
+
+header h1 {
+  margin: 0;
+}
+
+nav {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.nav-button {
+  padding: 0.5rem 0.875rem;
+  border: 1px solid white;
+  border-radius: 6px;
+  background: transparent;
+  color: white;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.nav-button.active {
+  background: white;
+  color: #1b5e20;
+}
+
+main {
+  max-width: 760px;                /* limited width on large screens */
+  margin: 1.5rem auto;             /* auto = centered */
+  padding: 0 1rem;                 /* space to the edge, important on phones */
+}
+
+.hidden {
+  display: none;
+}
