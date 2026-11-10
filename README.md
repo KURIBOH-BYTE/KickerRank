@@ -12,15 +12,16 @@ Projektarbeit im Modul *Webbasierte Anwendungen*, FHNW, HS2026.
 
 1. [Szenario](#szenario)
 2. [Installation und Start](#installation-und-start)
-3. [Ordnerstruktur](#ordnerstruktur)
-4. [Architektur](#architektur)
-5. [Datenmodell](#datenmodell)
-6. [Business-Regeln](#business-regeln)
-7. [REST-API](#rest-api)
-8. [Testen](#testen)
-9. [Designentscheidungen](#designentscheidungen)
-10. [Mögliche Erweiterungen](#mögliche-erweiterungen)
-11. [Quellen und Hilfsmittel](#quellen-und-hilfsmittel)
+3. [Tests ausführen](#tests-ausführen)
+4. [Ordnerstruktur](#ordnerstruktur)
+5. [Architektur](#architektur)
+6. [Datenmodell](#datenmodell)
+7. [Business-Regeln](#business-regeln)
+8. [REST-API](#rest-api)
+9. [Testen](#testen)
+10. [Designentscheidungen](#designentscheidungen)
+11. [Mögliche Erweiterungen](#mögliche-erweiterungen)
+12. [Quellen und Hilfsmittel](#quellen-und-hilfsmittel)
 
 ---
 
@@ -50,7 +51,7 @@ Im Büro steht ein Tischkicker, und jeder behauptet, der Beste zu sein. Die Kick
 
 ```bash
 # 1. In den Projektordner wechseln
-cd kicker-liga
+cd KickerRank
 
 # 2. Virtuelle Umgebung erstellen und aktivieren
 python3 -m venv .venv
@@ -61,34 +62,56 @@ source .venv/bin/activate        # Mac / Linux
 pip install -r requirements.txt
 
 # 4. Starten
-python app.py
+python main.py
+```
+
+**Mit uv** (schneller, empfohlen im Skript zu Übung 0):
+
+```bash
+uv venv
+uv pip install -r requirements.txt
+uv run python main.py
 ```
 
 Danach im Browser öffnen: **<http://localhost:8000>**
 
-- Beim ersten Start wird die Datenbank `kicker.db` (SQLite) automatisch angelegt und mit 6 Demo-Spielern gefüllt.
-- Datenbank zurücksetzen: `kicker.db` löschen und neu starten.
 - Stoppen: `Ctrl + C` im Terminal.
 - Die Oberfläche lädt jQuery von einem CDN, braucht also eine Internetverbindung.
+- Ab Meilenstein M4: Beim ersten Start wird die Datenbank `kicker.db` (SQLite) automatisch angelegt. Zurücksetzen: `kicker.db` löschen und neu starten.
+
+## Tests ausführen
+
+```bash
+uv run pytest          # mit uv
+pytest                 # oder mit aktivierter .venv
+```
+
+Alle Tests liegen im Ordner `tests/`. pytest findet automatisch jede Datei, die mit `test_` beginnt, und darin jede Funktion, die mit `test_` beginnt.
 
 ---
 
 ## Ordnerstruktur
 
 Die Ordner entsprechen den Schichten aus der Architekturübersicht der Vorlesung (Block 3, Abbildung 4).
+Das ist die **Zielstruktur**. Die Dateien entstehen nach und nach mit den Tickets in `planung/`.
 
 ```
-kicker-liga/
-├── app.py                      # Startpunkt: FastAPI-App, Router, Fehlerbehandlung, Demo-Daten
-├── requirements.txt            # Abhängigkeiten (FastAPI, Uvicorn, SQLAlchemy)
+KickerRank/
+├── main.py                     # Startpunkt: FastAPI-App, Router, Fehlerbehandlung
+├── requirements.txt            # Abhängigkeiten (FastAPI, Uvicorn, SQLAlchemy, pytest, httpx)
 ├── README.md                   # Diese Beschreibung
+│
+├── tests/                      # Automatische Tests (pytest)
+│   └── test_*.py
+│
+├── planung/                    # Backlog und Tickets (BACKLOG.md, tickets/)
 │
 ├── presentation/               # PRESENTATION LAYER (läuft im Browser)
 │   ├── index.html              #   Views: Rangliste, Spiel erfassen
 │   ├── css/
 │   │   └── style.css           #   Gestaltung
 │   └── js/
-│       └── app.js              #   View Logic: jQuery, AJAX-Aufrufe, DOM-Manipulation
+│       └── main.js             #   View Logic: jQuery, AJAX-Aufrufe, DOM-Manipulation
 │
 ├── service/                    # WEB/REST SERVICE LAYER (FastAPI)
 │   ├── messages.py             #   Messages: Pydantic-Modelle für JSON-Anfragen und -Antworten
@@ -140,19 +163,19 @@ Die Anwendung ist in vier Schichten aufgeteilt. Jede Schicht ruft nur die Schich
 
 | Schicht | Bestandteile | Aufgabe | Enthält keine … |
 |---|---|---|---|
-| **Presentation** | `index.html` (Views), `app.js` (View Logic) | Daten anzeigen, Eingaben entgegennehmen, Fehlermeldungen zeigen | Berechnungen, Regeln |
+| **Presentation** | `index.html` (Views), `main.js` (View Logic) | Daten anzeigen, Eingaben entgegennehmen, Fehlermeldungen zeigen | Berechnungen, Regeln |
 | **Web/REST Service** | `messages.py`, `*_endpoints.py` | JSON annehmen und prüfen (Datentypen), Business Service aufrufen, Antwort als JSON zurückgeben | Geschäftslogik |
 | **Business Service** | `dtos.py`, `*_service.py`, `elo.py` | Alle Regeln: Validierung, Elo-Berechnung, Korrektur- und Löschregeln, Transaktionen | SQL-Abfragen, HTTP |
 | **Persistence** | `entities.py`, `data_access.py` | Tabellen als Python-Klassen, Daten lesen und speichern | Geschäftsregeln |
 
 ### Ablauf einer Anfrage: «Spiel erfassen»
 
-1. **Presentation:** `app.js` liest das Formular und schickt `POST /api/spiele` mit JSON per AJAX.
+1. **Presentation:** `main.js` liest das Formular und schickt `POST /api/spiele` mit JSON per AJAX.
 2. **Service:** `spiel_endpoints.spiel_erfassen()` erhält die Daten als Message `SpielErfassen`. FastAPI hat die Datentypen bereits geprüft.
 3. **Business:** `SpielService.spiel_erfassen()` prüft die Regeln, berechnet mit `elo.py` die Punkte und erstellt eine `Spiel`-Entity.
 4. **Persistence:** `SpielRepository` speichert Spiel und beide Spieler in **einer Transaktion**.
 5. Der Business Service gibt ein `SpielDTO` zurück. Der Endpoint wandelt es in die Message `SpielAntwort` (JSON) um.
-6. **Presentation:** `app.js` zeigt «Roy +16 (1216), Lisa −16 (1184)» an und lädt die Rangliste neu.
+6. **Presentation:** `main.js` zeigt «Roy +16 (1216), Lisa −16 (1184)» an und lädt die Rangliste neu.
 
 Die Komponenten werden über **Dependency Injection** (`Depends` von FastAPI) verbunden:
 Endpoint → `SpielService` → `SpielRepository` / `SpielerRepository` → `Session`.
@@ -284,6 +307,7 @@ Content-Type: application/json
 
 ## Testen
 
+- **Automatische Tests:** `uv run pytest` (siehe [Tests ausführen](#tests-ausführen)).
 - **Swagger UI:** <http://localhost:8000/docs> zeigt alle Endpunkte. Jeder lässt sich dort direkt ausprobieren («Try it out»).
 - **Postman:** Anfragen wie im Beispiel oben an `http://localhost:8000/api/...` senden.
 - **Browser:** GET-Endpunkte wie <http://localhost:8000/api/rangliste> lassen sich direkt aufrufen.
