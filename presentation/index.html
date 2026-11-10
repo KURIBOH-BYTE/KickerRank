@@ -1,12 +1,32 @@
 <!doctype html>
-<html lang="de">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>KickerRank</title>
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <h1>KickerRank</h1>
+  <header>
+    <h1>KickerRank</h1>
+    <nav>
+      <button class="nav-button active" data-section="ranking">Ranking</button>
+      <button class="nav-button" data-section="new-game">New game</button>
+    </nav>
+  </header>
+
+  <main>
+    <section id="ranking" class="page-section">
+      <h2>Ranking</h2>
+      <p>The ranking table will be added in T08.</p>
+    </section>
+
+    <section id="new-game" class="page-section hidden">
+      <h2>New game</h2>
+      <p>The game form will be added in T09.</p>
+    </section>
+  </main>
+
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
   <script src="js/main.js"></script>
 </body>
