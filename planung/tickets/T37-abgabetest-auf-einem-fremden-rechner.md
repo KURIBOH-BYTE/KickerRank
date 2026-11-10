@@ -18,7 +18,7 @@ Sicherstellen, dass das Projekt beim Dozenten startet.
 - [ ] Start und alle Tests funktionieren ohne Nachbessern
 
 ## Tests
-- [ ] Kompletter manueller Durchlauf aller Testfälle aus `docs/manuelle_tests.md`
+- [ ] Kompletter manueller Durchlauf aller Testfälle aus `tests/manuelle_tests.md`
 
 ## Hinweise
 Mindestens 2 Tage vor der Deadline erledigen. Die MySQL-Einrichtung ist der heikelste Teil, darum genau so testen, wie es der Dozent machen wird.

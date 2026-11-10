@@ -118,7 +118,7 @@ uv run pytest          # mit uv
 pytest                 # oder mit aktivierter .venv
 ```
 
-Alle Tests liegen im Ordner `tests/`. pytest findet automatisch jede Datei, die mit `test_` beginnt, und darin jede Funktion, die mit `test_` beginnt.
+Alle Tests liegen im Ordner `tests/`. Die Oberfläche wird zusätzlich von Hand getestet, die Testfälle stehen in `tests/manuelle_tests.md`. pytest findet automatisch jede Datei, die mit `test_` beginnt, und darin jede Funktion, die mit `test_` beginnt.
 
 ---
 
@@ -136,8 +136,9 @@ KickerRank/
 │
 ├── docs/                       # Dokumentation, setup.sql für MySQL
 │
-├── tests/                      # Automatische Tests (pytest)
-│   └── test_*.py
+├── tests/                      # Tests
+│   ├── test_*.py               #   automatische Tests (pytest)
+│   └── manuelle_tests.md       #   manuelle Testfälle für die Oberfläche
 │
 ├── planung/                    # Backlog und Tickets (BACKLOG.md, tickets/)
 │
