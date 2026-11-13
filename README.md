@@ -96,8 +96,10 @@ Unter Windows: «MySQL Installer» von <https://dev.mysql.com/downloads/installe
 **2. Datenbank und Benutzer anlegen** (einmalig)
 
 ```bash
-mysql -u root < docs/setup.sql
+mysql -u root -p < docs/setup.sql
 ```
+
+Alternativ `docs/setup.sql` in MySQL Workbench öffnen und als root ausführen.
 
 `docs/setup.sql` legt die Datenbank `kickerrank` und den Benutzer `kicker` an. Die Tabellen erstellt die App beim ersten Start selbst.
 
