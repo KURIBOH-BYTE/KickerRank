@@ -19,6 +19,13 @@ header h1 {
   margin: 0;
 }
 
+h2 {
+  margin: 0 0 1rem;
+  font-size: 2rem;
+  color: black;
+
+}
+
 nav {
   display: flex;
   gap: 0.5rem;
@@ -40,11 +47,79 @@ nav {
 }
 
 main {
-  max-width: 760px;                /* limited width on large screens */
-  margin: 1.5rem auto;             /* auto = centered */
-  padding: 0 1rem;                 /* space to the edge, important on phones */
+  max-width: 1000px;               
+  margin: 1.5rem auto;            
+  padding: 0 1rem;      
+  align-items: center;
 }
 
 .hidden {
   display: none;
+}
+
+/* Ranking table */
+
+#ranking-table {
+  width: 100%;
+  border-spacing: 0 0.5rem;
+}
+
+#ranking-table th {
+  padding: 0 0.75rem;
+  text-align: left;
+  font-size: 1rem;
+  color: #6b6b6b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+#ranking-table td {
+  padding: 0.75rem;
+  border-collapse: separate;
+  background: white;
+}
+
+#ranking-table td:first-child {
+  border-radius: 8px 0 0 8px;
+  font-weight: bold;
+  width: 2.5rem;
+  text-align: center;
+}
+
+#ranking-table td:last-child {
+  border-radius: 0 8px 8px 0;
+}
+
+#ranking-table .number {
+  text-align: right;
+}
+
+#ranking-table .department {
+  padding: 0.2rem 0.6rem;
+  background: #e8f2ea;
+  border-radius: 1000px;
+  color: #1b5e20;
+  font-size: 1rem;
+}
+#ranking-table .number-elo {
+  font-weight: bold;
+  font-size: 1rem;
+  color: #1b5e20;
+}
+
+#ranking-table th[data-key="elo"],
+#ranking-table th[data-key="games_played"] {
+  text-align: right;
+}
+
+#ranking-table tbody tr:first-child td:first-child {
+  background: #ffd54f;
+}
+
+#ranking-table tbody tr:nth-child(2) td:first-child {
+  background: #cfd8dc;
+}
+
+#ranking-table tbody tr:nth-child(3) td:first-child {
+  background: #ffcc80;
 }
