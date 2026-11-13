@@ -20,4 +20,6 @@ def get_session():
 
 
 def init_db(bind=engine):
+    from persistence import entities  # noqa: F401  (Klassen registrieren, damit ihre Tabellen bekannt sind)
+
     Base.metadata.create_all(bind=bind)

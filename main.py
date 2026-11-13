@@ -5,12 +5,15 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
-from persistence.database import init_db
+from persistence.database import SessionLocal, init_db
+from persistence.db_entries import insert_db_entries
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
+    with SessionLocal() as session:
+        insert_db_entries(session)
     yield
 
 
