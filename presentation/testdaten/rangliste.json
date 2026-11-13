@@ -1,0 +1,7 @@
+[
+  {"id": 3, "name": "Lukas Müller", "abteilung": "Entwicklung", "elo": 1342, "anzahl_spiele": 27},
+  {"id": 1, "name": "Sarah Meier", "abteilung": "Marketing", "elo": 1278, "anzahl_spiele": 19},
+  {"id": 5, "name": "Giovanni Bernasconi-Hofstetter", "abteilung": "Finanzen", "elo": 1215, "anzahl_spiele": 12},
+  {"id": 2, "name": "Anna Keller", "abteilung": "Entwicklung", "elo": 1215, "anzahl_spiele": 8},
+  {"id": 4, "name": "Tim Brunner", "abteilung": "Support", "elo": 1000, "anzahl_spiele": 0}
+]
