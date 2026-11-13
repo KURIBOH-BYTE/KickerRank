@@ -1,0 +1,7 @@
+[
+  {"id": 3, "first_name": "Lukas", "last_name": "Müller", "department": "Development", "elo": 1342, "games_played": 27},
+  {"id": 1, "first_name": "Sarah", "last_name": "Meier", "department": "Marketing", "elo": 1278, "games_played": 19},
+  {"id": 5, "first_name": "Giovanni", "last_name": "Bernasconi-Hofstetter", "department": "Finance", "elo": 1215, "games_played": 12},
+  {"id": 2, "first_name": "Anna", "last_name": "Keller", "department": "Development", "elo": 1215, "games_played": 8},
+  {"id": 4, "first_name": "Tim", "last_name": "Brunner", "department": "Support", "elo": 1200, "games_played": 0}
+]
