@@ -32,6 +32,27 @@
         <tbody id="ranking-table-body">
         </tbody>
       </table>
+
+      <h3>Add player</h3>
+      <form id="player-form" class="card" novalidate>
+        <div class="form-row">
+          <div class="field">
+            <label for="first-name">First name</label>
+            <input type="text" id="first-name" maxlength="50">
+          </div>
+          <div class="field">
+            <label for="last-name">Last name</label>
+            <input type="text" id="last-name" maxlength="50">
+          </div>
+          <div class="field">
+            <label for="department">Department</label>
+            <select id="department">
+              <option value="">Choose department</option>
+            </select>
+          </div>
+        </div>
+        <button type="submit" class="submit-button">Add player</button>
+      </form>
     </section>
 
     <section id="new-game" class="page-section hidden">
@@ -63,6 +84,16 @@
         <ul id="game-errors" class="errors"></ul>
         <p id="game-success" class="success"></p>
       </form>
+
+      <h3>Last game</h3>
+      <div id="last-game" class="card">
+        <p class="last-game-result"></p>
+        <p class="last-game-info"></p>
+        <div class="last-game-actions">
+          <button type="button" class="secondary-button">Correct</button>
+          <button type="button" class="danger-button">Delete</button>
+        </div>
+      </div>
     </section>
   </main>
 

@@ -195,3 +195,110 @@ main {
   margin: 1rem 0 0;
   color: #1b5e20;
 }
+
+
+/* Shared */
+
+h3 {
+  margin: 2rem 0 0.75rem;
+  font-size: 1.3rem;
+}
+
+.card {
+  padding: 1.5rem;
+  background: white;
+  border-radius: 8px;
+}
+
+/* Add player form */
+
+.form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.field {
+  flex: 1;
+  min-width: 12rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.field label {
+  font-size: 0.85rem;
+  color: #6b6b6b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.field input,
+.field select {
+  padding: 0.5rem;
+  border: 1px solid #cfd8dc;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+/* Last game box */
+
+.last-game-result {
+  margin: 0;
+  font-size: 1.3rem;
+}
+
+.last-game-result .winner {
+  font-weight: bold;
+  color: #1b5e20;
+}
+
+.last-game-info {
+  margin: 0.4rem 0 1.2rem;
+  color: #6b6b6b;
+}
+
+.last-game-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.secondary-button,
+.danger-button {
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  background: white;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.secondary-button {
+  border: 1px solid #1b5e20;
+  color: #1b5e20;
+}
+
+.danger-button {
+  border: 1px solid #b3261e;
+  color: #b3261e;
+}
+
+/* Narrow screens: players stacked, "vs" centered between them */
+
+@media (max-width: 600px) {
+  .match {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .versus {
+    align-self: center;
+  }
+}
+
+.side select,
+.field select {
+  width: 100%;
+  min-width: 0;
+}
