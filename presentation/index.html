@@ -22,8 +22,8 @@
         <thead>
           <tr>
             <th data-key="place"></th>
-            <th data-key="name">First_name</th>
-            <th data-key="last_name">Last_name</th>
+            <th data-key="first_name">First name</th>
+            <th data-key="last_name">Last name</th>
             <th data-key="department">Department</th>
             <th data-key="elo">Elo</th>
             <th data-key="games_played">Games</th>
@@ -36,7 +36,33 @@
 
     <section id="new-game" class="page-section hidden">
       <h2>New game</h2>
-      <p>The game form will be added in T09.</p>
+      <form id="game-form" novalidate>
+        <div class="match">
+          <div class="side">
+            <label for="player-a">Player A</label>
+            <select id="player-a">
+              <option value="">Choose player</option>
+            </select>
+            <label for="goals-a">Goals</label>
+            <input type="number" id="goals-a" min="0" max="10">
+          </div>
+
+          <span class="versus">vs</span>
+
+          <div class="side">
+            <label for="player-b">Player B</label>
+            <select id="player-b">
+              <option value="">Choose player</option>
+            </select>
+            <label for="goals-b">Goals</label>
+            <input type="number" id="goals-b" min="0" max="10">
+          </div>
+        </div>
+
+        <button type="submit" class="submit-button">Save game</button>
+        <ul id="game-errors" class="errors"></ul>
+        <p id="game-success" class="success"></p>
+      </form>
     </section>
   </main>
 
