@@ -97,6 +97,42 @@ $("#game-form").on("submit", function (event) {
     }
 });
 
+function fetchDepartments() {
+    $.getJSON("test_data/departments.json").done(function (departments) {
+        const select = $("#department");
+        departments.forEach((department) => {
+            select.append(`<option value="${department}">${department}</option>`);
+        });
+    });
+}
+
+function fetchLastGame() {
+    $.getJSON("test_data/last_game.json").done(renderLastGame);
+}
+
+function renderLastGame(game) {
+    const playerA = `${game.player_a.first_name} ${game.player_a.last_name}`;
+    const playerB = `${game.player_b.first_name} ${game.player_b.last_name}`;
+    const winnerIsA = game.winner_id === game.player_a.id;
+
+    $("#last-game .last-game-result").html(
+        `<span class="${winnerIsA ? "winner" : ""}">${playerA}</span>
+         ${game.goals_a} : ${game.goals_b}
+         <span class="${winnerIsA ? "" : "winner"}">${playerB}</span>`
+    );
+
+    const date = new Date(game.played_at).toLocaleString("de-CH", {
+        day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit",
+    });
+    $("#last-game .last-game-info").text(`${date} · Elo ±${game.elo_change}`);
+}
+
+$("#player-form").on("submit", function (event) {
+    event.preventDefault();
+});
+
 $(document).ready(function () {
     fetchRanking();
+    fetchDepartments();
+    fetchLastGame();
 });
