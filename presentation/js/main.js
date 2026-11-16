@@ -42,30 +42,6 @@ function fillPlayersInDropdown(players) {
     });
 }
 
-function validateGameInput(game) {
-    const errors = [];
-
-    if (game.player_a_id === "" || game.player_b_id === "") {
-        errors.push("Please choose two players.");
-    } else if (game.player_a_id === game.player_b_id) {
-        errors.push("A player cannot play against themselves.");
-    }
-
-    if (game.goals_a === "" || game.goals_b === "") {
-        errors.push("Please enter the goals for both players.");
-    } else {
-        const goalsA = Number(game.goals_a);
-        const goalsB = Number(game.goals_b);
-        const validA = Number.isInteger(goalsA) && goalsA >= 0 && goalsA <= 10;
-        const validB = Number.isInteger(goalsB) && goalsB >= 0 && goalsB <= 10;
-        if (!validA || !validB) {
-            errors.push("Goals must be whole numbers from 0 to 10.");
-        }
-    }
-
-    return errors;
-}
-
 function showErrors(errors) {
     const list = $("#game-errors");
     list.empty();
@@ -74,27 +50,17 @@ function showErrors(errors) {
 
 $("#game-form").on("submit", function (event) {
     event.preventDefault();
+    showErrors([]);
     $("#game-success").text("");
 
-    const game = {
-        player_a_id: $("#player-a").val(),
-        player_b_id: $("#player-b").val(),
-        goals_a: $("#goals-a").val(),
-        goals_b: $("#goals-b").val(),
+    const gameData = {
+        player_a_id: Number($("#player-a").val()),
+        player_b_id: Number($("#player-b").val()),
+        goals_a: Number($("#goals-a").val()),
+        goals_b: Number($("#goals-b").val()),
     };
-    const errors = validateGameInput(game);
-    showErrors(errors);
-
-    if (errors.length === 0) {
-        const gameData = {
-            player_a_id: Number(game.player_a_id),
-            player_b_id: Number(game.player_b_id),
-            goals_a: Number(game.goals_a),
-            goals_b: Number(game.goals_b),
-        };
-        console.log(gameData);
-        $("#game-success").text("Input is valid. Saving follows in T17.");
-    }
+    console.log(gameData);
+    $("#game-success").text("Saving follows in T17.");
 });
 
 function fetchDepartments() {
