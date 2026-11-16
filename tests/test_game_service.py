@@ -108,3 +108,79 @@ def test_bei_fehler_wird_nichts_gespeichert(service, players, session):
 
     assert session.query(Game).count() == 0
     assert (anna.elo, anna.games_played) == (1200, 0)
+
+
+def test_korrigieren_dreht_sieger(service, players):
+    anna, tim = anna_and_tim(players)
+    game = service.create_game(anna.id, tim.id, 10, 7)
+
+    service.update_game(game.id, 7, 10)
+
+    assert (anna.elo, tim.elo) == (1184, 1216)
+    assert (game.goals_a, game.goals_b, game.elo_change) == (7, 10, 16)
+    assert game.winner is tim
+
+
+def test_korrigieren_aendert_anzahl_spiele_nicht(service, players):
+    anna, tim = anna_and_tim(players)
+    game = service.create_game(anna.id, tim.id, 10, 7)
+
+    service.update_game(game.id, 10, 3)
+
+    assert (anna.games_played, tim.games_played) == (1, 1)
+
+
+def test_korrigieren_mit_ungueltigem_resultat_aendert_nichts(service, players):
+    anna, tim = anna_and_tim(players)
+    game = service.create_game(anna.id, tim.id, 10, 7)
+
+    with pytest.raises(BusinessError, match="Exactly one player"):
+        service.update_game(game.id, 10, 10)
+
+    assert (game.goals_a, game.goals_b) == (10, 7)
+    assert (anna.elo, tim.elo) == (1216, 1184)
+
+
+def test_loeschen_setzt_elo_zurueck(service, players, session):
+    anna, tim = anna_and_tim(players)
+    game = service.create_game(anna.id, tim.id, 10, 7)
+
+    service.delete_game(game.id)
+
+    assert (anna.elo, tim.elo) == (1200, 1200)
+    assert (anna.games_played, tim.games_played) == (0, 0)
+    assert session.query(Game).count() == 0
+
+
+def test_nach_loeschen_ist_vorheriges_spiel_das_neuste(service, players):
+    anna, tim = anna_and_tim(players)
+    first = service.create_game(anna.id, tim.id, 10, 7)
+    second = service.create_game(anna.id, tim.id, 3, 10)
+
+    service.delete_game(second.id)
+    service.delete_game(first.id)
+
+    assert (anna.elo, tim.elo) == (1200, 1200)
+
+
+def test_altes_spiel_loeschen_gibt_fehler(service, players):
+    anna, tim = anna_and_tim(players)
+    old = service.create_game(anna.id, tim.id, 10, 7)
+    service.create_game(anna.id, tim.id, 3, 10)
+
+    with pytest.raises(BusinessError, match="Only the latest game"):
+        service.delete_game(old.id)
+
+
+def test_altes_spiel_korrigieren_gibt_fehler(service, players):
+    anna, tim = anna_and_tim(players)
+    old = service.create_game(anna.id, tim.id, 10, 7)
+    service.create_game(anna.id, tim.id, 3, 10)
+
+    with pytest.raises(BusinessError, match="Only the latest game"):
+        service.update_game(old.id, 7, 10)
+
+
+def test_unbekanntes_spiel_gibt_fehler(service):
+    with pytest.raises(BusinessError, match="does not exist"):
+        service.delete_game(999)
