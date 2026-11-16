@@ -280,7 +280,7 @@ erDiagram
 **Spiel erfassen**
 
 1. Spieler A und Spieler B müssen verschieden sein und existieren.
-2. Genau ein Spieler hat 10 Tore, der andere 0 bis 9.
+2. Die Tore sind ganze Zahlen; genau ein Spieler hat 10 Tore, der andere 0 bis 9.
 3. Der Gewinner ergibt sich aus den Toren.
 4. Spiel und beide Spieler werden in einer Transaktion gespeichert.
 
@@ -303,7 +303,13 @@ Punkteänderung:      Δ   = round(32 × (1 − E_Gewinner))
 2. **Korrigieren:** Nur das Resultat ist änderbar. Die Elo wird mit den gespeicherten Werten von vor dem Spiel neu berechnet.
 3. **Löschen:** Beide Spieler erhalten ihre Elo von vor dem Spiel zurück, die Anzahl Spiele sinkt um 1.
 
-Verletzte Regeln führen zu einem `GeschaeftsFehler`, den die App als **HTTP 400** mit `{"fehler": "…"}` zurückgibt.
+**Spieler anlegen**
+
+1. Vor- und Nachname dürfen nicht leer sein (Leerzeichen am Anfang und Ende werden entfernt) und höchstens 50 Zeichen lang sein.
+2. Die Abteilung muss aus der festen Liste stammen (`business/departments.py`).
+3. Die Kombination aus Vor- und Nachname darf es noch nicht geben.
+
+Verletzte Regeln führen zu einem `BusinessError` (`business/errors.py`), den die App als **HTTP 400** mit `{"error": "…"}` zurückgibt.
 
 ---
 
@@ -360,6 +366,7 @@ Content-Type: application/json
   - **`elo_a_vorher`, `elo_b_vorher` und `elo_aenderung` im Spiel** machen das Korrigieren und Löschen ohne Neuberechnung aller Spiele möglich.
 - **Der Gewinner wird nicht gespeichert.** Er ergibt sich aus den Toren, so können sich keine Daten widersprechen.
 - **DTOs statt Entities nach oben:** Der Service Layer kennt keine SQLAlchemy-Objekte. Änderungen an der Datenbank wirken sich nicht direkt auf das API aus.
+- **Validierung nur im Business Layer:** Alle Regeln (Pflichtfelder, Längen, erlaubte Werte, Duplikate, Spielregeln) werden ausschliesslich im Business Layer geprüft und bei Verletzung als `BusinessError` gemeldet, den der Service Layer in HTTP 400 übersetzt. Das Frontend prüft bewusst nichts selbst, sondern zeigt die Meldungen des Servers an. So liegt jede Regel an genau einer Stelle, kann nicht über den Browser umgangen werden und kann nicht an zwei Orten auseinanderlaufen. Pydantic prüft im Service Layer nur das Format (Datentypen, Pflichtfelder). Eine zusätzliche Prüfung im Browser wurde verworfen: Sie hätte nur eine etwas schnellere Rückmeldung gebracht, aber jede Regel doppelt (in Python und JavaScript) erfordert.
 - **Repositories (Data Access):** Alle Abfragen liegen in der Persistenzschicht. Der Business Layer enthält kein SQL.
 - **MySQL gemäss Skript:** Die Daten liegen wie in den Kursunterlagen vorgesehen in MySQL (Treiber `pymysql`). Dank SQLAlchemy steckt die Datenbank nur in einer Zeile (`DATABASE_URL` in `config.py`).
 - **Tests mit SQLite im Arbeitsspeicher:** Die automatischen Tests laufen ohne MySQL-Server, sind schnell und starten jedes Mal mit einer leeren Datenbank.
