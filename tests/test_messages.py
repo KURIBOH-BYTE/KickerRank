@@ -66,7 +66,7 @@ def test_responses_accept_valid_payloads_and_attributes():
     assert game_response.player_a.first_name == "Max"
     assert game_response.player_b.first_name == "Lisa"
     assert game_response.winner_id == 1
-    assert ErrorResponse.model_validate({"fehler": "Ungültige Anfrage"}).fehler
+    assert ErrorResponse.model_validate({"error": "Invalid request"}).error
 
 
 def test_game_create_rejects_non_integer_goals():
