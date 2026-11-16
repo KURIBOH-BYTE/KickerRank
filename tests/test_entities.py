@@ -61,3 +61,14 @@ def test_gleicher_vorname_ist_erlaubt(session):
     create_player(session, "Max", "Meier")
 
     assert session.query(Player).count() == 2
+
+
+def test_verlierer_property(session):
+    nina = create_player(session, "Nina")
+    lisa = create_player(session, "Lisa")
+
+    a_wins = Game(player_a=nina, player_b=lisa, goals_a=10, goals_b=7)
+    b_wins = Game(player_a=nina, player_b=lisa, goals_a=4, goals_b=10)
+
+    assert a_wins.loser is lisa
+    assert b_wins.loser is nina
