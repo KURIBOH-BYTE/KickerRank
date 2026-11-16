@@ -51,4 +51,4 @@ class GameResponse(BaseModel):
 
 
 class ErrorResponse(BaseModel):
-    fehler: str
+    error: str
