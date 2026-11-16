@@ -40,3 +40,9 @@ class Game(Base):
         if self.goals_a > self.goals_b:
             return self.player_a
         return self.player_b
+
+    @property
+    def loser(self) -> Player:
+        if self.winner is self.player_a:
+            return self.player_b
+        return self.player_a
