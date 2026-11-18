@@ -1,5 +1,5 @@
 from business.elo import rating_change
-from business.errors import BusinessError
+from business.errors import BusinessError, NotFoundError
 from persistence.entities import Game
 
 WINNING_GOALS = 10
@@ -59,10 +59,13 @@ class GameService:
         self.games.delete(game)
         self.games.save()
 
+    def last_game(self):
+        return self.games.last()
+
     def _get_latest_game(self, game_id):
         game = self.games.find(game_id)
         if game is None:
-            raise BusinessError("This game does not exist.")
+            raise NotFoundError("This game does not exist.")
         if game is not self.games.last():
             raise BusinessError("Only the latest game can be edited or deleted.")
         return game

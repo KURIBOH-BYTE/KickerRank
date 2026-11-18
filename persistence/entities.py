@@ -42,6 +42,10 @@ class Game(Base):
         return self.player_b
 
     @property
+    def winner_id(self) -> int:
+        return self.winner.id
+
+    @property
     def loser(self) -> Player:
         if self.winner is self.player_a:
             return self.player_b
