@@ -3,6 +3,7 @@ import pytest
 from business.errors import BusinessError
 from business.dtos import GameDTO, PlayerDTO
 from business.game_service import GameService, loser, winner
+from business.player_service import PlayerService
 from persistence.data_access import GameRepository, PlayerRepository
 from persistence.entities import Game, Player
 
@@ -206,3 +207,21 @@ def test_service_gibt_dtos_zurueck(service, players):
     assert isinstance(game, GameDTO)
     assert isinstance(game.player_a, PlayerDTO)
     assert isinstance(service.last_game(), GameDTO)
+
+
+def test_geloeschter_spieler_kann_nicht_spielen(session, service, players):
+    anna, tim = anna_and_tim(players)
+    PlayerService(players).delete_player(tim.id)
+
+    with pytest.raises(BusinessError, match="does not exist"):
+        service.create_game(anna.id, tim.id, 10, 7)
+
+
+def test_spiele_eines_geloeschten_spielers_bleiben(session, service, players):
+    anna, tim = anna_and_tim(players)
+    service.create_game(anna.id, tim.id, 10, 7)
+
+    PlayerService(players).delete_player(tim.id)
+
+    assert session.query(Game).count() == 1
+    assert service.last_game().player_b.first_name == "Tim"

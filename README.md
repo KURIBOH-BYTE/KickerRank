@@ -21,9 +21,10 @@ Projektarbeit im Modul *Webbasierte Anwendungen*, FHNW, HS2026.
 9. [REST-API](#rest-api)
 10. [Testen](#testen)
 11. [Designentscheidungen](#designentscheidungen)
-12. [Bezug zu den Kursunterlagen](#bezug-zu-den-kursunterlagen)
-13. [Mögliche Erweiterungen](#mögliche-erweiterungen)
-14. [Quellen und Hilfsmittel](#quellen-und-hilfsmittel)
+12. [Sicherheit](#sicherheit)
+13. [Bezug zu den Kursunterlagen](#bezug-zu-den-kursunterlagen)
+14. [Mögliche Erweiterungen](#mögliche-erweiterungen)
+15. [Quellen und Hilfsmittel](#quellen-und-hilfsmittel)
 
 ---
 
@@ -106,11 +107,23 @@ Alternativ `docs/setup.sql` in MySQL Workbench öffnen und als root ausführen.
 
 **3. Verbindung**
 
-Die Verbindung steht in `config.py`:
+`config.py` liest die Zugangsdaten aus Umgebungsvariablen bzw. aus einer Datei `.env`. Ohne `.env` gelten die Werte aus `docs/setup.sql` (Benutzer `kicker` auf `localhost`), es ist also nichts weiter zu tun.
 
-```python
-DATABASE_URL = "mysql+pymysql://kicker:kicker@localhost:3306/kickerrank"
+Andere Zugangsdaten (z. B. ein anderer Port oder ein anderes Passwort) werden in `.env` eingetragen, nicht im Code:
+
+```bash
+cp .env.example .env     # Vorlage kopieren, dann .env anpassen
 ```
+
+```
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=kicker
+DB_PASSWORD=kicker
+DB_NAME=kickerrank
+```
+
+`.env` steht in `.gitignore` und gelangt nie ins Repository. Nur die Vorlage `.env.example` ist versioniert.
 
 Die automatischen Tests brauchen **keinen** MySQL-Server, sie verwenden eine SQLite-Datenbank im Arbeitsspeicher.
 
@@ -132,8 +145,9 @@ Die Ordner entsprechen den Schichten aus der Architekturübersicht der Vorlesung
 ```
 KickerRank/
 ├── main.py                     # Startpunkt: FastAPI-App, Router, Fehlerbehandlung, Demo-Daten beim Start
-├── config.py                   # Einstellungen, z. B. DATABASE_URL für MySQL
-├── requirements.txt            # Abhängigkeiten (FastAPI, Uvicorn, SQLAlchemy, PyMySQL, pytest, httpx)
+├── config.py                   # Zugangsdaten zur Datenbank aus .env bzw. Umgebungsvariablen
+├── .env.example                # Vorlage für .env (die echte .env ist nicht im Repository)
+├── requirements.txt            # Abhängigkeiten (FastAPI, Uvicorn, SQLAlchemy, PyMySQL, python-dotenv, pytest, httpx)
 ├── README.md                   # Diese Beschreibung
 │
 ├── docs/                       # Dokumentation, setup.sql für MySQL
@@ -154,12 +168,12 @@ KickerRank/
 │
 ├── service/                    # WEB/REST SERVICE LAYER (FastAPI)
 │   ├── messages.py             #   Messages: Pydantic-Modelle für JSON-Anfragen und -Antworten
-│   ├── player_endpoints.py     #   REST Endpoints: Rangliste, Abteilungen, Spieler anlegen
+│   ├── player_endpoints.py     #   REST Endpoints: Rangliste, Abteilungen, Spieler anlegen, bearbeiten, löschen
 │   └── game_endpoints.py       #   REST Endpoints: Spiel erfassen, letztes Spiel, korrigieren, löschen
 │
 ├── business/                   # BUSINESS SERVICE LAYER (Geschäftslogik)
 │   ├── dtos.py                 #   Data Transfer Objects: PlayerDTO, GameDTO
-│   ├── player_service.py       #   Business Service: Spieler anlegen, Rangliste
+│   ├── player_service.py       #   Business Service: Rangliste, Spieler anlegen, bearbeiten, deaktivieren
 │   ├── game_service.py         #   Business Service: Spiel erfassen, korrigieren, löschen, Gewinner
 │   ├── elo.py                  #   Elo-Berechnung
 │   ├── departments.py          #   feste Liste der Abteilungen
@@ -226,55 +240,58 @@ Beide Repositories erhalten pro Anfrage dieselbe Session.
 
 ## Datenmodell
 
-Zwei Tabellen: `spieler` und `spiel`. Jedes Spiel verweist zweimal auf die Tabelle `spieler`, einmal für Spieler A und einmal für Spieler B.
+Zwei Tabellen: `player` und `game`. Jedes Spiel verweist zweimal auf die Tabelle `player`, einmal für Spieler A und einmal für Spieler B.
 
 ```mermaid
 erDiagram
-    SPIELER ||--o{ SPIEL : "spielt als A"
-    SPIELER ||--o{ SPIEL : "spielt als B"
-    SPIELER {
+    PLAYER ||--o{ GAME : "spielt als A"
+    PLAYER ||--o{ GAME : "spielt als B"
+    PLAYER {
         int id PK
-        string name
-        string abteilung
+        string first_name
+        string last_name
+        string department
         int elo
-        int anzahl_spiele
-        datetime erstellt_am
+        int games_played
+        datetime created_at
+        bool active
     }
-    SPIEL {
+    GAME {
         int id PK
-        datetime gespielt_am
-        int spieler_a_id FK
-        int spieler_b_id FK
-        int tore_a
-        int tore_b
-        int elo_a_vorher
-        int elo_b_vorher
-        int elo_aenderung
+        datetime played_at
+        int player_a_id FK
+        int player_b_id FK
+        int goals_a
+        int goals_b
+        int elo_a_before
+        int elo_b_before
+        int elo_change
     }
 ```
 
-**Tabelle `spieler`**
+**Tabelle `player`**
 
 | Spalte | Typ | Regeln |
 |---|---|---|
-| id | Integer | Primärschlüssel |
-| name | String(100) | NOT NULL, eindeutig |
-| abteilung | String(50) | NOT NULL, aus fester Liste |
+| id | Integer | Primärschlüssel, AUTO_INCREMENT |
+| first_name, last_name | String(50) | NOT NULL, Kombination eindeutig |
+| department | String(50) | NOT NULL, aus fester Liste |
 | elo | Integer | NOT NULL, Start 1200 |
-| anzahl_spiele | Integer | NOT NULL, Start 0 |
-| erstellt_am | DateTime | automatisch |
+| games_played | Integer | NOT NULL, Start 0 |
+| created_at | DateTime | automatisch |
+| active | Boolean | NOT NULL, Start `true`. `false` = gelöscht (ausgeblendet) |
 
-**Tabelle `spiel`**
+**Tabelle `game`**
 
 | Spalte | Typ | Regeln |
 |---|---|---|
-| id | Integer | Primärschlüssel |
-| gespielt_am | DateTime | automatisch |
-| spieler_a_id | Integer | Fremdschlüssel → spieler.id |
-| spieler_b_id | Integer | Fremdschlüssel → spieler.id, ≠ spieler_a_id |
-| tore_a, tore_b | Integer | 0–10, genau ein Spieler hat 10 |
-| elo_a_vorher, elo_b_vorher | Integer | Elo der Spieler vor dem Spiel |
-| elo_aenderung | Integer | Punkte, die der Gewinner erhält und der Verlierer abgibt |
+| id | Integer | Primärschlüssel, AUTO_INCREMENT |
+| played_at | DateTime | automatisch |
+| player_a_id | Integer | Fremdschlüssel → player.id |
+| player_b_id | Integer | Fremdschlüssel → player.id, ≠ player_a_id |
+| goals_a, goals_b | Integer | 0–10, genau ein Spieler hat 10 |
+| elo_a_before, elo_b_before | Integer | Elo der Spieler vor dem Spiel |
+| elo_change | Integer | Punkte, die der Gewinner erhält und der Verlierer abgibt |
 
 ---
 
@@ -306,13 +323,20 @@ Punkteänderung:      Δ   = round(32 × (1 − E_Gewinner))
 2. **Korrigieren:** Nur das Resultat ist änderbar. Die Elo wird mit den gespeicherten Werten von vor dem Spiel neu berechnet.
 3. **Löschen:** Beide Spieler erhalten ihre Elo von vor dem Spiel zurück, die Anzahl Spiele sinkt um 1.
 
-**Spieler anlegen**
+**Spieler anlegen und bearbeiten**
 
 1. Vor- und Nachname dürfen nicht leer sein (Leerzeichen am Anfang und Ende werden entfernt) und höchstens 50 Zeichen lang sein.
 2. Die Abteilung muss aus der festen Liste stammen (`business/departments.py`).
-3. Die Kombination aus Vor- und Nachname darf es noch nicht geben.
+3. Die Kombination aus Vor- und Nachname darf es noch nicht geben, auch nicht bei einem gelöschten Spieler. Beim Bearbeiten darf ein Spieler seinen eigenen Namen behalten.
+4. Beim Bearbeiten ändern sich nur Name und Abteilung. Elo und Anzahl Spiele entstehen aus den Spielen.
 
-Verletzte Regeln führen zu einem `BusinessError` (`business/errors.py`), den die App als **HTTP 400** mit `{"error": "…"}` zurückgibt.
+**Spieler löschen**
+
+1. Ein Spieler wird nicht aus der Datenbank entfernt, sondern deaktiviert (`active = false`).
+2. Gelöschte Spieler erscheinen nicht mehr in der Rangliste und in den Dropdowns und können keine neuen Spiele bestreiten.
+3. Ihre bisherigen Spiele bleiben erhalten.
+
+Verletzte Regeln führen zu einem `BusinessError` (`business/errors.py`), den die App als **HTTP 400** mit `{"error": "…"}` zurückgibt. Gibt es einen Spieler oder ein Spiel nicht, wird ein `NotFoundError` daraus, also **HTTP 404**.
 
 ---
 
@@ -320,33 +344,41 @@ Verletzte Regeln führen zu einem `BusinessError` (`business/errors.py`), den di
 
 | Methode | Endpunkt | Anfrage (JSON) | Antwort |
 |---|---|---|---|
-| GET | `/api/rangliste` | – | Liste von Spielern, nach Elo sortiert |
-| GET | `/api/abteilungen` | – | Liste der erlaubten Abteilungen |
-| POST | `/api/spieler` | `name`, `abteilung` | neuer Spieler (201) |
-| POST | `/api/spiele` | `spieler_a_id`, `spieler_b_id`, `tore_a`, `tore_b` | erfasstes Spiel (201) |
-| GET | `/api/spiele/letztes` | – | neustes Spiel oder `null` |
-| PUT | `/api/spiele/{id}` | `tore_a`, `tore_b` | korrigiertes Spiel |
-| DELETE | `/api/spiele/{id}` | – | leer (204) |
+| GET | `/api/ranking` | – | aktive Spieler, nach Elo sortiert |
+| GET | `/api/departments` | – | Liste der erlaubten Abteilungen |
+| POST | `/api/players` | `first_name`, `last_name`, `department` | neuer Spieler (201) |
+| PUT | `/api/players/{id}` | `first_name`, `last_name`, `department` | bearbeiteter Spieler |
+| DELETE | `/api/players/{id}` | – | leer (204), Spieler wird deaktiviert |
+| POST | `/api/games` | `player_a_id`, `player_b_id`, `goals_a`, `goals_b` | erfasstes Spiel (201) |
+| GET | `/api/games/last` | – | neustes Spiel oder `null` |
+| PUT | `/api/games/{id}` | `goals_a`, `goals_b` | korrigiertes Spiel |
+| DELETE | `/api/games/{id}` | – | leer (204) |
+
+Fehler: 400 (Regel verletzt), 404 (gibt es nicht), 422 (falsches Format, von FastAPI). Alle Endpunkte lassen sich unter <http://localhost:8000/docs> ausprobieren.
 
 **Beispiel: Spiel erfassen**
 
 ```http
-POST /api/spiele
+POST /api/games
 Content-Type: application/json
 
-{ "spieler_a_id": 1, "spieler_b_id": 2, "tore_a": 10, "tore_b": 7 }
+{ "player_a_id": 1, "player_b_id": 2, "goals_a": 10, "goals_b": 7 }
 ```
 
 ```json
 {
-  "id": 1,
-  "gespielt_am": "2026-11-01T16:49:20",
-  "spieler_a": { "id": 1, "name": "Roy",  "abteilung": "Informatik", "elo": 1216, "anzahl_spiele": 1 },
-  "spieler_b": { "id": 2, "name": "Lisa", "abteilung": "Marketing",  "elo": 1184, "anzahl_spiele": 1 },
-  "tore_a": 10,
-  "tore_b": 7,
-  "gewinner": "Roy",
-  "elo_aenderung": 16
+  "id": 13,
+  "played_at": "2026-11-21T10:15:00",
+  "player_a_id": 1,
+  "player_b_id": 2,
+  "player_a": { "id": 1, "first_name": "Lukas", "last_name": "Müller", "department": "Development", "elo": 1275, "games_played": 5, "created_at": "…" },
+  "player_b": { "id": 2, "first_name": "Sarah", "last_name": "Meier", "department": "Marketing", "elo": 1215, "games_played": 5, "created_at": "…" },
+  "goals_a": 10,
+  "goals_b": 7,
+  "elo_a_before": 1260,
+  "elo_b_before": 1230,
+  "elo_change": 15,
+  "winner_id": 1
 }
 ```
 
@@ -367,6 +399,7 @@ Content-Type: application/json
   - **Abteilung als Text** statt eigener Tabelle. Tippfehler verhindert eine feste Liste im Business Layer, die im GUI als Dropdown erscheint.
   - **`elo` und `anzahl_spiele` beim Spieler** sind redundant, weil sie sich aus allen Spielen berechnen liessen. Sie werden gespeichert, damit die Rangliste mit einer einfachen Abfrage geladen werden kann.
   - **`elo_a_vorher`, `elo_b_vorher` und `elo_aenderung` im Spiel** machen das Korrigieren und Löschen ohne Neuberechnung aller Spiele möglich.
+- **Spieler deaktivieren statt löschen:** «Delete» setzt `active = false`. Ein echtes Löschen ginge nicht sauber, weil Spiele per Fremdschlüssel auf den Spieler verweisen und das Elo der Gegner aus diesen Spielen entstanden ist. So bleiben alle Spiele und Elo-Werte stimmig, der Spieler verschwindet aber aus Rangliste und Dropdowns.
 - **Der Gewinner wird nicht gespeichert.** Er ergibt sich aus den Toren, so können sich keine Daten widersprechen. Berechnet wird er im Business Layer (`winner()` und `loser()` in `business/game_service.py`), nicht in der Entität: Gemäss Kursunterlagen enthalten Datenobjekte keine Geschäftslogik, und «mehr Tore gewinnt» ist eine Spielregel.
 - **DTOs statt Entities nach oben:** Der Service Layer kennt keine SQLAlchemy-Objekte. Die Business Services wandeln Entitäten in DTOs (`business/dtos.py`, als `@dataclass`) um und geben nur diese zurück. Die Endpoints wandeln die DTOs in Messages um. Damit gibt es drei Arten von Datenobjekten, je eine pro Schicht (Skript Block 3, Abb. 8):
   - **Entität** (Persistence, `Player`, `Game`): mit der Datenbank verbunden, Änderungen werden beim `commit` gespeichert.
@@ -376,7 +409,7 @@ Content-Type: application/json
 - **Validierung nur im Business Layer:** Alle Regeln (Pflichtfelder, Längen, erlaubte Werte, Duplikate, Spielregeln) werden ausschliesslich im Business Layer geprüft und bei Verletzung als `BusinessError` gemeldet, den der Service Layer in HTTP 400 übersetzt. Das Frontend prüft bewusst nichts selbst, sondern zeigt die Meldungen des Servers an. So liegt jede Regel an genau einer Stelle, kann nicht über den Browser umgangen werden und kann nicht an zwei Orten auseinanderlaufen. Pydantic prüft im Service Layer nur das Format (Datentypen, Pflichtfelder). Eine zusätzliche Prüfung im Browser wurde verworfen: Sie hätte nur eine etwas schnellere Rückmeldung gebracht, aber jede Regel doppelt (in Python und JavaScript) erfordert.
 - **Demo-Daten über die Services:** Beim ersten Start legt `business/db_entries.py` 6 Spieler und 12 Spiele an, und zwar über `PlayerService` und `GameService`, nicht direkt in die Datenbank. Damit gelten für die Demo-Daten dieselben Regeln wie für echte Eingaben, und das Elo wird vom GameService berechnet statt von Hand eingetragen. Die Datei liegt im Business Layer, weil sie die Services benutzt (die Persistenzschicht darf den Business Layer nicht kennen).
 - **Repositories (Data Access):** Alle Abfragen liegen in der Persistenzschicht. Der Business Layer enthält kein SQL.
-- **MySQL gemäss Skript:** Die Daten liegen wie in den Kursunterlagen vorgesehen in MySQL (Treiber `pymysql`). Dank SQLAlchemy steckt die Datenbank nur in einer Zeile (`DATABASE_URL` in `config.py`).
+- **MySQL gemäss Skript:** Die Daten liegen wie in den Kursunterlagen vorgesehen in MySQL (Treiber `pymysql`). Dank SQLAlchemy steckt die Wahl der Datenbank nur in `config.py`.
 - **Tests mit SQLite im Arbeitsspeicher:** Die automatischen Tests laufen ohne MySQL-Server, sind schnell und starten jedes Mal mit einer leeren Datenbank.
 - **Grenze des Modells:** 2 vs 2 würde weitere Spalten oder eine dritte Tabelle (Spielteilnahme) erfordern.
 - **Responsive Design für Handy und Desktop:** Die Oberfläche ist bewusst so gebaut, dass sie auf allen Bildschirmgrössen funktioniert:
@@ -386,6 +419,20 @@ Content-Type: application/json
   - Eine **Media Query** (`max-width: 500px`) verkleinert Titel und Abstände auf dem Handy.
   - **Prozentwerte für Abstände wurden verworfen**, weil sie sich nach der Breite des Elternelements richten und dadurch auf grossen Bildschirmen zu gross und auf dem Handy zu klein werden.
 - **Sprache:** Code (Variablen, Funktionen, Tabellen) und Oberfläche sind auf **Englisch**, die Dokumentation (README, Tickets, Beschreibung) auf **Deutsch**, weil Aufgabenstellung und Bewertung deutschsprachig sind.
+
+---
+
+## Sicherheit
+
+Umgesetzt nach *Datenbanken, Kapitel 11: Datenbankanbindung mit Python Teil 1* (Boeh, 2026) und der Übung «SQL Injection».
+
+| Massnahme | Umsetzung |
+|---|---|
+| **Keine SQL Injection** | Kein SQL wird aus Benutzereingaben zusammengesetzt (kein f-String, kein `text(...)`). Alle Abfragen laufen über SQLAlchemy (`select(...).where(Player.first_name == first_name)`), das die Werte wie die Platzhalter `%s` eines Prepared Statements getrennt von der Abfrage an die Datenbank schickt. |
+| **Zugangsdaten nicht im Code** | `config.py` liest Host, Port, Benutzer, Passwort und Datenbank aus Umgebungsvariablen bzw. `.env` (wie in der Übung, mit `python-dotenv`). `.env` steht in `.gitignore`, versioniert ist nur die Vorlage `.env.example`. Im Code stehen als Standardwerte nur die öffentlichen Werte des Projektbenutzers `kicker` aus `docs/setup.sql`, kein persönliches Passwort. Die URL wird mit `URL.create` gebaut, damit auch Passwörter mit Sonderzeichen wie `#`, `@` oder `?` funktionieren. |
+| **Minimale Rechte** | Die App verbindet sich nie als `root`, sondern als `kicker`. Dieser Benutzer gilt nur für `localhost`, nur für die Datenbank `kickerrank` und hat nur die nötigen Rechte: `SELECT, INSERT, UPDATE, DELETE` für die Daten und `CREATE, REFERENCES`, um die Tabellen beim ersten Start anzulegen. Er darf z. B. keine Tabellen löschen (`DROP`) und keine Benutzer verwalten. |
+| **Verbindungen schliessen** | `get_session()` schliesst die Session in `finally`, auch bei einem Fehler. Beim Start wird `with SessionLocal() as session` verwendet. |
+| **Eingaben prüfen** | Pydantic prüft im Service Layer Format und Datentypen, der Business Layer prüft alle Regeln (siehe Designentscheidungen). |
 
 ---
 
@@ -420,7 +467,6 @@ Bewusste Abweichungen:
 ## Mögliche Erweiterungen
 
 - Spielverlauf aller Spiele
-- Spieler bearbeiten und löschen
 - Siegchance vor dem Spiel anzeigen («Lisa gewinnt mit 64 %»)
 - Spielerprofil mit Elo-Verlaufsdiagramm
 - Abteilungs-Rangliste (Durchschnitts-Elo pro Abteilung)
@@ -434,6 +480,7 @@ Bewusste Abweichungen:
 _Nach den Vorgaben der FHNW für schriftliche Arbeiten ergänzen._
 
 - Schaaf, M. (2026). *Webbasierte Anwendungen, Block 3 – Einheit 1: Architekturübersicht und erster Teil Präsentationsschicht.* FHNW.
+- Boeh, R. (2026). *Datenbanken, Kapitel 11: Datenbankanbindung mit Python Teil 1* und Übung «SQL Injection». FHNW.
 - Boeh, R. (2026). *Datenbanken, Kapitel 12: Datenbankanbindung mit Python Teil 2.* FHNW.
 - FastAPI-Dokumentation: <https://fastapi.tiangolo.com/>
 - SQLAlchemy-Dokumentation: <https://docs.sqlalchemy.org/>

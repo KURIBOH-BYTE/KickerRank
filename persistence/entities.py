@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, UniqueConstraint
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from persistence.database import Base
@@ -17,6 +17,7 @@ class Player(Base):
     elo: Mapped[int] = mapped_column(Integer, default=1200)
     games_played: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)
+    active: Mapped[bool] = mapped_column(Boolean, default=True)
 
 
 class Game(Base):
