@@ -51,11 +51,11 @@ def test_spiele_behalten_ihr_datum(session):
     assert last.played_at.strftime("%d.%m.%Y %H:%M") == "13.11.2026 12:05"
 
 
-def test_keine_demo_daten_wenn_alle_spieler_geloescht(session):
+def test_keine_demo_daten_wenn_alle_spieler_inaktiv(session):
     insert_db_entries(session)
     service = PlayerService(PlayerRepository(session))
     for player in service.ranking():
-        service.delete_player(player.id)
+        service.update_player(player.id, player.first_name, player.last_name, player.department, False)
 
     insert_db_entries(session)
 

@@ -11,6 +11,7 @@ class PlayerDTO:
     elo: int
     games_played: int
     created_at: datetime
+    active: bool
 
 
 @dataclass
@@ -38,4 +39,5 @@ def to_player_dto(player):
         elo=player.elo,
         games_played=player.games_played,
         created_at=player.created_at,
+        active=player.active,
     )

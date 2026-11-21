@@ -13,6 +13,10 @@ class PlayerRepository:
                  .order_by(Player.elo.desc(), Player.last_name, Player.first_name))
         return list(self.session.scalars(query))
 
+    def all_by_name(self):
+        query = select(Player).order_by(Player.last_name, Player.first_name)
+        return list(self.session.scalars(query))
+
     def count(self):
         return self.session.scalar(select(func.count()).select_from(Player))
 

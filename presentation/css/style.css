@@ -298,12 +298,6 @@ button:disabled {
   cursor: not-allowed;
 }
 
-.edit-player-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
 .confirm-text {
   align-self: center;
   color: #b3261e;

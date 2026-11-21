@@ -40,11 +40,8 @@ function showErrors(listSelector, errors) {
 
 // ---------- Ranking and player dropdowns ----------
 
-let rankedPlayers = [];
-
 function fetchRanking() {
     $.getJSON("/api/ranking").done(function (players) {
-        rankedPlayers = players;
         renderRanking(players);
         fillPlayersInDropdown(players);
     });
@@ -67,7 +64,7 @@ function renderRanking(players) {
 }
 
 function fillPlayersInDropdown(players) {
-    $("#player-a, #player-b, #edit-player").each(function () {
+    $("#player-a, #player-b").each(function () {
         const select = $(this);
         const selected = select.val();
         select.find("option:not(:first)").remove();
@@ -108,6 +105,7 @@ $("#player-form").on("submit", function (event) {
             $("#player-form")[0].reset();
             $("#player-success").text(`${player.first_name} ${player.last_name} was added.`);
             fetchRanking();
+            fetchAllPlayers();
         })
         .fail(function (xhr) {
             showErrors("#player-errors", [errorMessage(xhr)]);
@@ -115,28 +113,28 @@ $("#player-form").on("submit", function (event) {
 });
 
 
-// ---------- Edit and delete player ----------
+// ---------- Edit player ----------
 
-function showDeleteButton() {
-    const disabled = $("#edit-player").val() ? "" : "disabled";
-    $("#edit-player-form .edit-player-actions").html(
-        `<button type="submit" class="submit-button" ${disabled}>Update</button>
-         <button type="button" class="danger-button" id="delete-player" ${disabled}>Delete</button>`
-    );
-}
+let allPlayers = [];
 
-function resetEditPlayerForm() {
-    $("#edit-player-form")[0].reset();
-    showDeleteButton();
+function fetchAllPlayers() {
+    $.getJSON("/api/players").done(function (players) {
+        allPlayers = players;
+        const select = $("#edit-player");
+        select.find("option:not(:first)").remove();
+        players.forEach((player) => {
+            const status = player.active ? "" : " – inactive";
+            select.append(`<option value="${player.id}">${player.first_name} ${player.last_name} (${player.department})${status}</option>`);
+        });
+    });
 }
 
 $("#edit-player").on("change", function () {
     showErrors("#edit-player-errors", []);
     $("#edit-player-success").text("");
-    showDeleteButton();
 
     let player = null;
-    for (const entry of rankedPlayers) {
+    for (const entry of allPlayers) {
         if (entry.id === Number($(this).val())) {
             player = entry;
         }
@@ -145,6 +143,8 @@ $("#edit-player").on("change", function () {
     $("#edit-first-name").val(player ? player.first_name : "");
     $("#edit-last-name").val(player ? player.last_name : "");
     $("#edit-department").val(player ? player.department : "");
+    $("#edit-active").val(player && !player.active ? "false" : "true");
+    $("#update-player").prop("disabled", player === null);
 });
 
 $("#edit-player-form").on("submit", function (event) {
@@ -152,51 +152,23 @@ $("#edit-player-form").on("submit", function (event) {
     showErrors("#edit-player-errors", []);
     $("#edit-player-success").text("");
 
-    const playerId = $("#edit-player").val();
     const playerData = {
         first_name: $("#edit-first-name").val(),
         last_name: $("#edit-last-name").val(),
         department: $("#edit-department").val(),
+        active: $("#edit-active").val() === "true",
     };
 
-    sendJson("PUT", `/api/players/${playerId}`, playerData)
+    sendJson("PUT", `/api/players/${$("#edit-player").val()}`, playerData)
         .done(function (player) {
-            resetEditPlayerForm();
+            $("#edit-player-form")[0].reset();
+            $("#update-player").prop("disabled", true);
             $("#edit-player-success").text(`${player.first_name} ${player.last_name} was updated.`);
             fetchRanking();
+            fetchAllPlayers();
             fetchLastGame();
         })
         .fail(function (xhr) {
-            showErrors("#edit-player-errors", [errorMessage(xhr)]);
-        });
-});
-
-$("#edit-player-form").on("click", "#delete-player", function () {
-    showErrors("#edit-player-errors", []);
-    $("#edit-player-success").text("");
-
-    $("#edit-player-form .edit-player-actions").html(
-        `<span class="confirm-text">Delete this player?</span>
-         <button type="button" class="danger-button" id="confirm-delete-player">Yes, delete</button>
-         <button type="button" class="edit-button" id="cancel-delete-player">Cancel</button>`
-    );
-});
-
-$("#edit-player-form").on("click", "#cancel-delete-player", function () {
-    showDeleteButton();
-});
-
-$("#edit-player-form").on("click", "#confirm-delete-player", function () {
-    const playerId = $("#edit-player").val();
-
-    sendJson("DELETE", `/api/players/${playerId}`)
-        .done(function () {
-            resetEditPlayerForm();
-            $("#edit-player-success").text("The player was deleted.");
-            fetchRanking();
-        })
-        .fail(function (xhr) {
-            showDeleteButton();
             showErrors("#edit-player-errors", [errorMessage(xhr)]);
         });
 });
@@ -329,8 +301,8 @@ $("#last-game").on("click", "#cancel-delete", function () {
 
 
 $(document).ready(function () {
-    showDeleteButton();
     fetchRanking();
+    fetchAllPlayers();
     fetchDepartments();
     fetchLastGame();
 });

@@ -34,6 +34,7 @@ def test_responses_accept_valid_payloads_and_attributes():
         elo=1200,
         games_played=1,
         created_at=created_at,
+        active=True,
     )
     player_b = SimpleNamespace(
         id=2,
@@ -43,6 +44,7 @@ def test_responses_accept_valid_payloads_and_attributes():
         elo=1184,
         games_played=1,
         created_at=created_at,
+        active=True,
     )
     game = SimpleNamespace(
         id=1,

@@ -81,8 +81,15 @@
               <option value="">Choose department</option>
             </select>
           </div>
+          <div class="field">
+            <label for="edit-active">Status</label>
+            <select id="edit-active">
+              <option value="true">Active</option>
+              <option value="false">Inactive</option>
+            </select>
+          </div>
         </div>
-        <div class="edit-player-actions"></div>
+        <button type="submit" class="submit-button" id="update-player" disabled>Update</button>
         <ul id="edit-player-errors" class="errors"></ul>
         <p id="edit-player-success" class="success"></p>
       </form>

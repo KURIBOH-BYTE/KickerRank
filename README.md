@@ -168,12 +168,12 @@ KickerRank/
 │
 ├── service/                    # WEB/REST SERVICE LAYER (FastAPI)
 │   ├── messages.py             #   Messages: Pydantic-Modelle für JSON-Anfragen und -Antworten
-│   ├── player_endpoints.py     #   REST Endpoints: Rangliste, Abteilungen, Spieler anlegen, bearbeiten, löschen
+│   ├── player_endpoints.py     #   REST Endpoints: Rangliste, Abteilungen, Spieler anlegen und bearbeiten
 │   └── game_endpoints.py       #   REST Endpoints: Spiel erfassen, letztes Spiel, korrigieren, löschen
 │
 ├── business/                   # BUSINESS SERVICE LAYER (Geschäftslogik)
 │   ├── dtos.py                 #   Data Transfer Objects: PlayerDTO, GameDTO
-│   ├── player_service.py       #   Business Service: Rangliste, Spieler anlegen, bearbeiten, deaktivieren
+│   ├── player_service.py       #   Business Service: Rangliste, Spieler anlegen und bearbeiten (inkl. aktiv/inaktiv)
 │   ├── game_service.py         #   Business Service: Spiel erfassen, korrigieren, löschen, Gewinner
 │   ├── elo.py                  #   Elo-Berechnung
 │   ├── departments.py          #   feste Liste der Abteilungen
@@ -279,7 +279,7 @@ erDiagram
 | elo | Integer | NOT NULL, Start 1200 |
 | games_played | Integer | NOT NULL, Start 0 |
 | created_at | DateTime | automatisch |
-| active | Boolean | NOT NULL, Start `true`. `false` = gelöscht (ausgeblendet) |
+| active | Boolean | NOT NULL, Start `true`. `false` = inaktiv (aus Rangliste und Dropdowns ausgeblendet) |
 
 **Tabelle `game`**
 
@@ -327,13 +327,13 @@ Punkteänderung:      Δ   = round(32 × (1 − E_Gewinner))
 
 1. Vor- und Nachname dürfen nicht leer sein (Leerzeichen am Anfang und Ende werden entfernt) und höchstens 50 Zeichen lang sein.
 2. Die Abteilung muss aus der festen Liste stammen (`business/departments.py`).
-3. Die Kombination aus Vor- und Nachname darf es noch nicht geben, auch nicht bei einem gelöschten Spieler. Beim Bearbeiten darf ein Spieler seinen eigenen Namen behalten.
-4. Beim Bearbeiten ändern sich nur Name und Abteilung. Elo und Anzahl Spiele entstehen aus den Spielen.
+3. Die Kombination aus Vor- und Nachname darf es noch nicht geben, auch nicht bei einem inaktiven Spieler. Beim Bearbeiten darf ein Spieler seinen eigenen Namen behalten.
+4. Beim Bearbeiten ändern sich Name, Abteilung und Status (aktiv/inaktiv). Elo und Anzahl Spiele entstehen aus den Spielen und lassen sich nicht bearbeiten.
 
-**Spieler löschen**
+**Spieler aktiv/inaktiv**
 
-1. Ein Spieler wird nicht aus der Datenbank entfernt, sondern deaktiviert (`active = false`).
-2. Gelöschte Spieler erscheinen nicht mehr in der Rangliste und in den Dropdowns und können keine neuen Spiele bestreiten.
+1. Spieler werden nie gelöscht. Statt dessen werden sie unter «Edit player» auf inaktiv gesetzt (`active = false`) und lassen sich dort jederzeit wieder aktivieren.
+2. Inaktive Spieler erscheinen nicht in der Rangliste und nicht in den Dropdowns bei «New game» und können keine neuen Spiele bestreiten.
 3. Ihre bisherigen Spiele bleiben erhalten.
 
 Verletzte Regeln führen zu einem `BusinessError` (`business/errors.py`), den die App als **HTTP 400** mit `{"error": "…"}` zurückgibt. Gibt es einen Spieler oder ein Spiel nicht, wird ein `NotFoundError` daraus, also **HTTP 404**.
@@ -347,8 +347,8 @@ Verletzte Regeln führen zu einem `BusinessError` (`business/errors.py`), den di
 | GET | `/api/ranking` | – | aktive Spieler, nach Elo sortiert |
 | GET | `/api/departments` | – | Liste der erlaubten Abteilungen |
 | POST | `/api/players` | `first_name`, `last_name`, `department` | neuer Spieler (201) |
-| PUT | `/api/players/{id}` | `first_name`, `last_name`, `department` | bearbeiteter Spieler |
-| DELETE | `/api/players/{id}` | – | leer (204), Spieler wird deaktiviert |
+| GET | `/api/players` | – | alle Spieler inkl. inaktive, nach Name sortiert (für «Edit player») |
+| PUT | `/api/players/{id}` | `first_name`, `last_name`, `department`, `active` | bearbeiteter Spieler |
 | POST | `/api/games` | `player_a_id`, `player_b_id`, `goals_a`, `goals_b` | erfasstes Spiel (201) |
 | GET | `/api/games/last` | – | neustes Spiel oder `null` |
 | PUT | `/api/games/{id}` | `goals_a`, `goals_b` | korrigiertes Spiel |
@@ -399,7 +399,7 @@ Content-Type: application/json
   - **Abteilung als Text** statt eigener Tabelle. Tippfehler verhindert eine feste Liste im Business Layer, die im GUI als Dropdown erscheint.
   - **`elo` und `anzahl_spiele` beim Spieler** sind redundant, weil sie sich aus allen Spielen berechnen liessen. Sie werden gespeichert, damit die Rangliste mit einer einfachen Abfrage geladen werden kann.
   - **`elo_a_vorher`, `elo_b_vorher` und `elo_aenderung` im Spiel** machen das Korrigieren und Löschen ohne Neuberechnung aller Spiele möglich.
-- **Spieler deaktivieren statt löschen:** «Delete» setzt `active = false`. Ein echtes Löschen ginge nicht sauber, weil Spiele per Fremdschlüssel auf den Spieler verweisen und das Elo der Gegner aus diesen Spielen entstanden ist. So bleiben alle Spiele und Elo-Werte stimmig, der Spieler verschwindet aber aus Rangliste und Dropdowns.
+- **Spieler deaktivieren statt löschen:** Spieler lassen sich unter «Edit player» auf inaktiv setzen, aber nicht löschen. Ein echtes Löschen ginge nicht sauber, weil Spiele per Fremdschlüssel auf den Spieler verweisen und das Elo der Gegner aus diesen Spielen entstanden ist. So bleiben alle Spiele und Elo-Werte stimmig, der Spieler verschwindet aber aus Rangliste und Dropdowns und kann jederzeit wieder aktiviert werden. Ein eigener Lösch-Button mit Rückfrage wurde bewusst weggelassen, um die Oberfläche einfach zu halten.
 - **Der Gewinner wird nicht gespeichert.** Er ergibt sich aus den Toren, so können sich keine Daten widersprechen. Berechnet wird er im Business Layer (`winner()` und `loser()` in `business/game_service.py`), nicht in der Entität: Gemäss Kursunterlagen enthalten Datenobjekte keine Geschäftslogik, und «mehr Tore gewinnt» ist eine Spielregel.
 - **DTOs statt Entities nach oben:** Der Service Layer kennt keine SQLAlchemy-Objekte. Die Business Services wandeln Entitäten in DTOs (`business/dtos.py`, als `@dataclass`) um und geben nur diese zurück. Die Endpoints wandeln die DTOs in Messages um. Damit gibt es drei Arten von Datenobjekten, je eine pro Schicht (Skript Block 3, Abb. 8):
   - **Entität** (Persistence, `Player`, `Game`): mit der Datenbank verbunden, Änderungen werden beim `commit` gespeichert.

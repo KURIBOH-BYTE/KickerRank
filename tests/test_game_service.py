@@ -209,19 +209,19 @@ def test_service_gibt_dtos_zurueck(service, players):
     assert isinstance(service.last_game(), GameDTO)
 
 
-def test_geloeschter_spieler_kann_nicht_spielen(session, service, players):
+def test_inaktiver_spieler_kann_nicht_spielen(session, service, players):
     anna, tim = anna_and_tim(players)
-    PlayerService(players).delete_player(tim.id)
+    PlayerService(players).update_player(tim.id, "Tim", "Brunner", "HR", False)
 
     with pytest.raises(BusinessError, match="does not exist"):
         service.create_game(anna.id, tim.id, 10, 7)
 
 
-def test_spiele_eines_geloeschten_spielers_bleiben(session, service, players):
+def test_spiele_eines_inaktiven_spielers_bleiben(session, service, players):
     anna, tim = anna_and_tim(players)
     service.create_game(anna.id, tim.id, 10, 7)
 
-    PlayerService(players).delete_player(tim.id)
+    PlayerService(players).update_player(tim.id, "Tim", "Brunner", "HR", False)
 
     assert session.query(Game).count() == 1
     assert service.last_game().player_b.first_name == "Tim"

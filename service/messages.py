@@ -9,6 +9,13 @@ class PlayerCreate(BaseModel):
     department: str
 
 
+class PlayerUpdate(BaseModel):
+    first_name: str
+    last_name: str
+    department: str
+    active: bool
+
+
 class GameCreate(BaseModel):
     player_a_id: int
     player_b_id: int
@@ -31,6 +38,7 @@ class PlayerResponse(BaseModel):
     elo: int
     games_played: int
     created_at: datetime
+    active: bool
 
 
 class GameResponse(BaseModel):
