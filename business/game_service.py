@@ -85,7 +85,7 @@ class GameService:
 
         player_a = self.players.find(player_a_id)
         player_b = self.players.find(player_b_id)
-        if player_a is None or player_b is None:
+        if player_a is None or player_b is None or not player_a.active or not player_b.active:
             raise BusinessError("At least one player does not exist.")
 
         return player_a, player_b

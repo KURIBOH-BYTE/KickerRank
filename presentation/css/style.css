@@ -293,6 +293,17 @@ h3 {
   text-align: center;
 }
 
+button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.edit-player-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
 .confirm-text {
   align-self: center;
   color: #b3261e;

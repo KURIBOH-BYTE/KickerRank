@@ -1,6 +1,6 @@
 from business.departments import DEPARTMENTS, is_valid_department
 from business.dtos import to_player_dto
-from business.errors import BusinessError
+from business.errors import BusinessError, NotFoundError
 from persistence.entities import Player
 
 MAX_NAME_LENGTH = 50
@@ -22,16 +22,39 @@ class PlayerService:
 
         check_name(first_name, "First name")
         check_name(last_name, "Last name")
-
-        if not is_valid_department(department):
-            raise BusinessError(f"Unknown department. Allowed: {', '.join(DEPARTMENTS)}.")
-
-        if self.players.find_by_name(first_name, last_name):
-            raise BusinessError(f"A player named {first_name} {last_name} already exists.")
+        check_department(department)
+        check_name_is_free(self.players, first_name, last_name)
 
         player = self.players.add(Player(first_name=first_name, last_name=last_name, department=department))
         self.players.save()
         return to_player_dto(player)
+
+    def update_player(self, player_id, first_name, last_name, department):
+        player = self._get_active_player(player_id)
+        first_name = first_name.strip()
+        last_name = last_name.strip()
+
+        check_name(first_name, "First name")
+        check_name(last_name, "Last name")
+        check_department(department)
+        check_name_is_free(self.players, first_name, last_name, except_player=player)
+
+        player.first_name = first_name
+        player.last_name = last_name
+        player.department = department
+        self.players.save()
+        return to_player_dto(player)
+
+    def delete_player(self, player_id):
+        player = self._get_active_player(player_id)
+        player.active = False
+        self.players.save()
+
+    def _get_active_player(self, player_id):
+        player = self.players.find(player_id)
+        if player is None or not player.active:
+            raise NotFoundError("This player does not exist.")
+        return player
 
 
 def check_name(name, label):
@@ -39,3 +62,17 @@ def check_name(name, label):
         raise BusinessError(f"{label} must not be empty.")
     if len(name) > MAX_NAME_LENGTH:
         raise BusinessError(f"{label} is too long (max. {MAX_NAME_LENGTH} characters).")
+
+
+def check_department(department):
+    if not is_valid_department(department):
+        raise BusinessError(f"Unknown department. Allowed: {', '.join(DEPARTMENTS)}.")
+
+
+def check_name_is_free(players, first_name, last_name, except_player=None):
+    existing = players.find_by_name(first_name, last_name)
+    if existing is None or existing is except_player:
+        return
+    if existing.active:
+        raise BusinessError(f"A player named {first_name} {last_name} already exists.")
+    raise BusinessError(f"A deleted player named {first_name} {last_name} already exists.")

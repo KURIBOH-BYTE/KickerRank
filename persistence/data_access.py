@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from persistence.entities import Game, Player
 
@@ -8,8 +8,13 @@ class PlayerRepository:
         self.session = session
 
     def all_by_elo(self):
-        query = select(Player).order_by(Player.elo.desc(), Player.last_name, Player.first_name)
+        query = (select(Player)
+                 .where(Player.active)
+                 .order_by(Player.elo.desc(), Player.last_name, Player.first_name))
         return list(self.session.scalars(query))
+
+    def count(self):
+        return self.session.scalar(select(func.count()).select_from(Player))
 
     def find(self, player_id):
         return self.session.get(Player, player_id)

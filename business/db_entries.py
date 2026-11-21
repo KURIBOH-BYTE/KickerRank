@@ -35,7 +35,7 @@ def insert_db_entries(session):
     player_service = PlayerService(players)
     game_service = GameService(players, GameRepository(session))
 
-    if player_service.ranking():
+    if players.count() > 0:
         return
 
     player_ids = {}

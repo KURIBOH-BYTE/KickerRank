@@ -72,3 +72,28 @@ def test_fehlendes_feld_gibt_422(client):
     response = client.post("/api/players", json={"first_name": "Anna", "last_name": "Keller"})
 
     assert response.status_code == 422
+
+
+def test_spieler_bearbeiten(client):
+    anna = client.post("/api/players", json={"first_name": "Anna", "last_name": "Keller", "department": "HR"}).json()
+
+    response = client.put(f"/api/players/{anna['id']}",
+                          json={"first_name": "Anna", "last_name": "Meier", "department": "Support"})
+
+    assert response.status_code == 200
+    assert client.get("/api/ranking").json()[0]["last_name"] == "Meier"
+
+
+def test_spieler_loeschen_gibt_204(client):
+    anna = client.post("/api/players", json={"first_name": "Anna", "last_name": "Keller", "department": "HR"}).json()
+
+    response = client.delete(f"/api/players/{anna['id']}")
+
+    assert response.status_code == 204
+    assert client.get("/api/ranking").json() == []
+
+
+def test_unbekannter_spieler_gibt_404(client):
+    assert client.delete("/api/players/999").status_code == 404
+    response = client.put("/api/players/999", json={"first_name": "A", "last_name": "B", "department": "HR"})
+    assert response.status_code == 404

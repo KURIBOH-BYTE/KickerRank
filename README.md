@@ -168,12 +168,12 @@ KickerRank/
 │
 ├── service/                    # WEB/REST SERVICE LAYER (FastAPI)
 │   ├── messages.py             #   Messages: Pydantic-Modelle für JSON-Anfragen und -Antworten
-│   ├── player_endpoints.py     #   REST Endpoints: Rangliste, Abteilungen, Spieler anlegen
+│   ├── player_endpoints.py     #   REST Endpoints: Rangliste, Abteilungen, Spieler anlegen, bearbeiten, löschen
 │   └── game_endpoints.py       #   REST Endpoints: Spiel erfassen, letztes Spiel, korrigieren, löschen
 │
 ├── business/                   # BUSINESS SERVICE LAYER (Geschäftslogik)
 │   ├── dtos.py                 #   Data Transfer Objects: PlayerDTO, GameDTO
-│   ├── player_service.py       #   Business Service: Spieler anlegen, Rangliste
+│   ├── player_service.py       #   Business Service: Rangliste, Spieler anlegen, bearbeiten, deaktivieren
 │   ├── game_service.py         #   Business Service: Spiel erfassen, korrigieren, löschen, Gewinner
 │   ├── elo.py                  #   Elo-Berechnung
 │   ├── departments.py          #   feste Liste der Abteilungen
@@ -240,55 +240,58 @@ Beide Repositories erhalten pro Anfrage dieselbe Session.
 
 ## Datenmodell
 
-Zwei Tabellen: `spieler` und `spiel`. Jedes Spiel verweist zweimal auf die Tabelle `spieler`, einmal für Spieler A und einmal für Spieler B.
+Zwei Tabellen: `player` und `game`. Jedes Spiel verweist zweimal auf die Tabelle `player`, einmal für Spieler A und einmal für Spieler B.
 
 ```mermaid
 erDiagram
-    SPIELER ||--o{ SPIEL : "spielt als A"
-    SPIELER ||--o{ SPIEL : "spielt als B"
-    SPIELER {
+    PLAYER ||--o{ GAME : "spielt als A"
+    PLAYER ||--o{ GAME : "spielt als B"
+    PLAYER {
         int id PK
-        string name
-        string abteilung
+        string first_name
+        string last_name
+        string department
         int elo
-        int anzahl_spiele
-        datetime erstellt_am
+        int games_played
+        datetime created_at
+        bool active
     }
-    SPIEL {
+    GAME {
         int id PK
-        datetime gespielt_am
-        int spieler_a_id FK
-        int spieler_b_id FK
-        int tore_a
-        int tore_b
-        int elo_a_vorher
-        int elo_b_vorher
-        int elo_aenderung
+        datetime played_at
+        int player_a_id FK
+        int player_b_id FK
+        int goals_a
+        int goals_b
+        int elo_a_before
+        int elo_b_before
+        int elo_change
     }
 ```
 
-**Tabelle `spieler`**
+**Tabelle `player`**
 
 | Spalte | Typ | Regeln |
 |---|---|---|
-| id | Integer | Primärschlüssel |
-| name | String(100) | NOT NULL, eindeutig |
-| abteilung | String(50) | NOT NULL, aus fester Liste |
+| id | Integer | Primärschlüssel, AUTO_INCREMENT |
+| first_name, last_name | String(50) | NOT NULL, Kombination eindeutig |
+| department | String(50) | NOT NULL, aus fester Liste |
 | elo | Integer | NOT NULL, Start 1200 |
-| anzahl_spiele | Integer | NOT NULL, Start 0 |
-| erstellt_am | DateTime | automatisch |
+| games_played | Integer | NOT NULL, Start 0 |
+| created_at | DateTime | automatisch |
+| active | Boolean | NOT NULL, Start `true`. `false` = gelöscht (ausgeblendet) |
 
-**Tabelle `spiel`**
+**Tabelle `game`**
 
 | Spalte | Typ | Regeln |
 |---|---|---|
-| id | Integer | Primärschlüssel |
-| gespielt_am | DateTime | automatisch |
-| spieler_a_id | Integer | Fremdschlüssel → spieler.id |
-| spieler_b_id | Integer | Fremdschlüssel → spieler.id, ≠ spieler_a_id |
-| tore_a, tore_b | Integer | 0–10, genau ein Spieler hat 10 |
-| elo_a_vorher, elo_b_vorher | Integer | Elo der Spieler vor dem Spiel |
-| elo_aenderung | Integer | Punkte, die der Gewinner erhält und der Verlierer abgibt |
+| id | Integer | Primärschlüssel, AUTO_INCREMENT |
+| played_at | DateTime | automatisch |
+| player_a_id | Integer | Fremdschlüssel → player.id |
+| player_b_id | Integer | Fremdschlüssel → player.id, ≠ player_a_id |
+| goals_a, goals_b | Integer | 0–10, genau ein Spieler hat 10 |
+| elo_a_before, elo_b_before | Integer | Elo der Spieler vor dem Spiel |
+| elo_change | Integer | Punkte, die der Gewinner erhält und der Verlierer abgibt |
 
 ---
 
@@ -320,13 +323,20 @@ Punkteänderung:      Δ   = round(32 × (1 − E_Gewinner))
 2. **Korrigieren:** Nur das Resultat ist änderbar. Die Elo wird mit den gespeicherten Werten von vor dem Spiel neu berechnet.
 3. **Löschen:** Beide Spieler erhalten ihre Elo von vor dem Spiel zurück, die Anzahl Spiele sinkt um 1.
 
-**Spieler anlegen**
+**Spieler anlegen und bearbeiten**
 
 1. Vor- und Nachname dürfen nicht leer sein (Leerzeichen am Anfang und Ende werden entfernt) und höchstens 50 Zeichen lang sein.
 2. Die Abteilung muss aus der festen Liste stammen (`business/departments.py`).
-3. Die Kombination aus Vor- und Nachname darf es noch nicht geben.
+3. Die Kombination aus Vor- und Nachname darf es noch nicht geben, auch nicht bei einem gelöschten Spieler. Beim Bearbeiten darf ein Spieler seinen eigenen Namen behalten.
+4. Beim Bearbeiten ändern sich nur Name und Abteilung. Elo und Anzahl Spiele entstehen aus den Spielen.
 
-Verletzte Regeln führen zu einem `BusinessError` (`business/errors.py`), den die App als **HTTP 400** mit `{"error": "…"}` zurückgibt.
+**Spieler löschen**
+
+1. Ein Spieler wird nicht aus der Datenbank entfernt, sondern deaktiviert (`active = false`).
+2. Gelöschte Spieler erscheinen nicht mehr in der Rangliste und in den Dropdowns und können keine neuen Spiele bestreiten.
+3. Ihre bisherigen Spiele bleiben erhalten.
+
+Verletzte Regeln führen zu einem `BusinessError` (`business/errors.py`), den die App als **HTTP 400** mit `{"error": "…"}` zurückgibt. Gibt es einen Spieler oder ein Spiel nicht, wird ein `NotFoundError` daraus, also **HTTP 404**.
 
 ---
 
@@ -334,33 +344,41 @@ Verletzte Regeln führen zu einem `BusinessError` (`business/errors.py`), den di
 
 | Methode | Endpunkt | Anfrage (JSON) | Antwort |
 |---|---|---|---|
-| GET | `/api/rangliste` | – | Liste von Spielern, nach Elo sortiert |
-| GET | `/api/abteilungen` | – | Liste der erlaubten Abteilungen |
-| POST | `/api/spieler` | `name`, `abteilung` | neuer Spieler (201) |
-| POST | `/api/spiele` | `spieler_a_id`, `spieler_b_id`, `tore_a`, `tore_b` | erfasstes Spiel (201) |
-| GET | `/api/spiele/letztes` | – | neustes Spiel oder `null` |
-| PUT | `/api/spiele/{id}` | `tore_a`, `tore_b` | korrigiertes Spiel |
-| DELETE | `/api/spiele/{id}` | – | leer (204) |
+| GET | `/api/ranking` | – | aktive Spieler, nach Elo sortiert |
+| GET | `/api/departments` | – | Liste der erlaubten Abteilungen |
+| POST | `/api/players` | `first_name`, `last_name`, `department` | neuer Spieler (201) |
+| PUT | `/api/players/{id}` | `first_name`, `last_name`, `department` | bearbeiteter Spieler |
+| DELETE | `/api/players/{id}` | – | leer (204), Spieler wird deaktiviert |
+| POST | `/api/games` | `player_a_id`, `player_b_id`, `goals_a`, `goals_b` | erfasstes Spiel (201) |
+| GET | `/api/games/last` | – | neustes Spiel oder `null` |
+| PUT | `/api/games/{id}` | `goals_a`, `goals_b` | korrigiertes Spiel |
+| DELETE | `/api/games/{id}` | – | leer (204) |
+
+Fehler: 400 (Regel verletzt), 404 (gibt es nicht), 422 (falsches Format, von FastAPI). Alle Endpunkte lassen sich unter <http://localhost:8000/docs> ausprobieren.
 
 **Beispiel: Spiel erfassen**
 
 ```http
-POST /api/spiele
+POST /api/games
 Content-Type: application/json
 
-{ "spieler_a_id": 1, "spieler_b_id": 2, "tore_a": 10, "tore_b": 7 }
+{ "player_a_id": 1, "player_b_id": 2, "goals_a": 10, "goals_b": 7 }
 ```
 
 ```json
 {
-  "id": 1,
-  "gespielt_am": "2026-11-01T16:49:20",
-  "spieler_a": { "id": 1, "name": "Roy",  "abteilung": "Informatik", "elo": 1216, "anzahl_spiele": 1 },
-  "spieler_b": { "id": 2, "name": "Lisa", "abteilung": "Marketing",  "elo": 1184, "anzahl_spiele": 1 },
-  "tore_a": 10,
-  "tore_b": 7,
-  "gewinner": "Roy",
-  "elo_aenderung": 16
+  "id": 13,
+  "played_at": "2026-11-21T10:15:00",
+  "player_a_id": 1,
+  "player_b_id": 2,
+  "player_a": { "id": 1, "first_name": "Lukas", "last_name": "Müller", "department": "Development", "elo": 1275, "games_played": 5, "created_at": "…" },
+  "player_b": { "id": 2, "first_name": "Sarah", "last_name": "Meier", "department": "Marketing", "elo": 1215, "games_played": 5, "created_at": "…" },
+  "goals_a": 10,
+  "goals_b": 7,
+  "elo_a_before": 1260,
+  "elo_b_before": 1230,
+  "elo_change": 15,
+  "winner_id": 1
 }
 ```
 
@@ -381,6 +399,7 @@ Content-Type: application/json
   - **Abteilung als Text** statt eigener Tabelle. Tippfehler verhindert eine feste Liste im Business Layer, die im GUI als Dropdown erscheint.
   - **`elo` und `anzahl_spiele` beim Spieler** sind redundant, weil sie sich aus allen Spielen berechnen liessen. Sie werden gespeichert, damit die Rangliste mit einer einfachen Abfrage geladen werden kann.
   - **`elo_a_vorher`, `elo_b_vorher` und `elo_aenderung` im Spiel** machen das Korrigieren und Löschen ohne Neuberechnung aller Spiele möglich.
+- **Spieler deaktivieren statt löschen:** «Delete» setzt `active = false`. Ein echtes Löschen ginge nicht sauber, weil Spiele per Fremdschlüssel auf den Spieler verweisen und das Elo der Gegner aus diesen Spielen entstanden ist. So bleiben alle Spiele und Elo-Werte stimmig, der Spieler verschwindet aber aus Rangliste und Dropdowns.
 - **Der Gewinner wird nicht gespeichert.** Er ergibt sich aus den Toren, so können sich keine Daten widersprechen. Berechnet wird er im Business Layer (`winner()` und `loser()` in `business/game_service.py`), nicht in der Entität: Gemäss Kursunterlagen enthalten Datenobjekte keine Geschäftslogik, und «mehr Tore gewinnt» ist eine Spielregel.
 - **DTOs statt Entities nach oben:** Der Service Layer kennt keine SQLAlchemy-Objekte. Die Business Services wandeln Entitäten in DTOs (`business/dtos.py`, als `@dataclass`) um und geben nur diese zurück. Die Endpoints wandeln die DTOs in Messages um. Damit gibt es drei Arten von Datenobjekten, je eine pro Schicht (Skript Block 3, Abb. 8):
   - **Entität** (Persistence, `Player`, `Game`): mit der Datenbank verbunden, Änderungen werden beim `commit` gespeichert.
@@ -448,7 +467,6 @@ Bewusste Abweichungen:
 ## Mögliche Erweiterungen
 
 - Spielverlauf aller Spiele
-- Spieler bearbeiten und löschen
 - Siegchance vor dem Spiel anzeigen («Lisa gewinnt mit 64 %»)
 - Spielerprofil mit Elo-Verlaufsdiagramm
 - Abteilungs-Rangliste (Durchschnitts-Elo pro Abteilung)

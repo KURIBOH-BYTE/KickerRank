@@ -55,6 +55,37 @@
         <ul id="player-errors" class="errors"></ul>
         <p id="player-success" class="success"></p>
       </form>
+
+      <h3>Edit player</h3>
+      <form id="edit-player-form" class="card" novalidate>
+        <div class="form-row">
+          <div class="field">
+            <label for="edit-player">Player</label>
+            <select id="edit-player">
+              <option value="">Choose player</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label for="edit-first-name">First name</label>
+            <input type="text" id="edit-first-name" maxlength="50">
+          </div>
+          <div class="field">
+            <label for="edit-last-name">Last name</label>
+            <input type="text" id="edit-last-name" maxlength="50">
+          </div>
+          <div class="field">
+            <label for="edit-department">Department</label>
+            <select id="edit-department">
+              <option value="">Choose department</option>
+            </select>
+          </div>
+        </div>
+        <div class="edit-player-actions"></div>
+        <ul id="edit-player-errors" class="errors"></ul>
+        <p id="edit-player-success" class="success"></p>
+      </form>
     </section>
 
     <section id="new-game" class="page-section hidden">

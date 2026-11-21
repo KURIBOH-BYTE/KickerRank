@@ -1,5 +1,7 @@
 from business.db_entries import DEMO_GAMES, DEMO_PLAYERS, insert_db_entries
 from business.elo import START_RATING
+from business.player_service import PlayerService
+from persistence.data_access import PlayerRepository
 from persistence.entities import Game, Player
 
 
@@ -47,3 +49,14 @@ def test_spiele_behalten_ihr_datum(session):
     last = session.query(Game).order_by(Game.id.desc()).first()
 
     assert last.played_at.strftime("%d.%m.%Y %H:%M") == "13.11.2026 12:05"
+
+
+def test_keine_demo_daten_wenn_alle_spieler_geloescht(session):
+    insert_db_entries(session)
+    service = PlayerService(PlayerRepository(session))
+    for player in service.ranking():
+        service.delete_player(player.id)
+
+    insert_db_entries(session)
+
+    assert session.query(Player).count() == 6

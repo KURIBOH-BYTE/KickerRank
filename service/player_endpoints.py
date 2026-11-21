@@ -26,3 +26,14 @@ def get_departments() -> list[str]:
 @router.post("/players", status_code=201)
 def create_player(message: PlayerCreate, service: PlayerService = Depends(get_player_service)) -> PlayerResponse:
     return service.create_player(message.first_name, message.last_name, message.department)
+
+
+@router.put("/players/{player_id}")
+def update_player(player_id: int, message: PlayerCreate,
+                  service: PlayerService = Depends(get_player_service)) -> PlayerResponse:
+    return service.update_player(player_id, message.first_name, message.last_name, message.department)
+
+
+@router.delete("/players/{player_id}", status_code=204)
+def delete_player(player_id: int, service: PlayerService = Depends(get_player_service)) -> None:
+    service.delete_player(player_id)
