@@ -8,13 +8,44 @@ $(".nav-button").on("click", function () {
     $("#" + sectionId).removeClass("hidden");
 });
 
+
+// ---------- Helpers for talking to the server ----------
+
+function sendJson(method, url, data) {
+    return $.ajax({
+        url: url,
+        method: method,
+        contentType: "application/json",
+        data: data === undefined ? undefined : JSON.stringify(data),
+    });
+}
+
+function errorMessage(xhr) {
+    if (xhr.responseJSON && xhr.responseJSON.error) {
+        return xhr.responseJSON.error;
+    }
+    return "Please fill in all fields.";
+}
+
+function numberOrNull(value) {
+    return value === "" ? null : Number(value);
+}
+
+function showErrors(listSelector, errors) {
+    const list = $(listSelector);
+    list.empty();
+    errors.forEach((error) => list.append(`<li>${error}</li>`));
+}
+
+
+// ---------- Ranking and player dropdowns ----------
+
 function fetchRanking() {
-    $.getJSON("test_data/ranking.json").done(function (players) {
+    $.getJSON("/api/ranking").done(function (players) {
         renderRanking(players);
         fillPlayersInDropdown(players);
     });
 }
-
 
 function renderRanking(players) {
     const tbody = $("#ranking-table-body");
@@ -35,36 +66,20 @@ function renderRanking(players) {
 function fillPlayersInDropdown(players) {
     $("#player-a, #player-b").each(function () {
         const select = $(this);
+        const selected = select.val();
         select.find("option:not(:first)").remove();
         players.forEach((player) => {
             select.append(`<option value="${player.id}">${player.first_name} ${player.last_name} (${player.department})</option>`);
         });
+        select.val(selected);
     });
 }
 
-function showErrors(errors) {
-    const list = $("#game-errors");
-    list.empty();
-    errors.forEach((error) => list.append(`<li>${error}</li>`));
-}
 
-$("#game-form").on("submit", function (event) {
-    event.preventDefault();
-    showErrors([]);
-    $("#game-success").text("");
-
-    const gameData = {
-        player_a_id: Number($("#player-a").val()),
-        player_b_id: Number($("#player-b").val()),
-        goals_a: Number($("#goals-a").val()),
-        goals_b: Number($("#goals-b").val()),
-    };
-    console.log(gameData);
-    $("#game-success").text("Saving follows in T17.");
-});
+// ---------- Add player ----------
 
 function fetchDepartments() {
-    $.getJSON("test_data/departments.json").done(function (departments) {
+    $.getJSON("/api/departments").done(function (departments) {
         const select = $("#department");
         departments.forEach((department) => {
             select.append(`<option value="${department}">${department}</option>`);
@@ -72,30 +87,154 @@ function fetchDepartments() {
     });
 }
 
+$("#player-form").on("submit", function (event) {
+    event.preventDefault();
+    showErrors("#player-errors", []);
+    $("#player-success").text("");
+
+    const playerData = {
+        first_name: $("#first-name").val(),
+        last_name: $("#last-name").val(),
+        department: $("#department").val(),
+    };
+
+    sendJson("POST", "/api/players", playerData)
+        .done(function (player) {
+            $("#player-form")[0].reset();
+            $("#player-success").text(`${player.first_name} ${player.last_name} was added.`);
+            fetchRanking();
+        })
+        .fail(function (xhr) {
+            showErrors("#player-errors", [errorMessage(xhr)]);
+        });
+});
+
+
+// ---------- New game ----------
+
+$("#game-form").on("submit", function (event) {
+    event.preventDefault();
+    showErrors("#game-errors", []);
+    $("#game-success").text("");
+
+    const gameData = {
+        player_a_id: Number($("#player-a").val()),
+        player_b_id: Number($("#player-b").val()),
+        goals_a: numberOrNull($("#goals-a").val()),
+        goals_b: numberOrNull($("#goals-b").val()),
+    };
+
+    sendJson("POST", "/api/games", gameData)
+        .done(function (game) {
+            $("#goals-a, #goals-b").val("");
+            $("#game-success").text(`Game saved. Elo ±${game.elo_change}`);
+            renderLastGame(game);
+            fetchRanking();
+        })
+        .fail(function (xhr) {
+            showErrors("#game-errors", [errorMessage(xhr)]);
+        });
+});
+
+
+// ---------- Last game: show, edit, delete ----------
+
+let lastGame = null;
+
 function fetchLastGame() {
-    $.getJSON("test_data/last_game.json").done(renderLastGame);
+    $.getJSON("/api/games/last").done(renderLastGame);
+}
+
+function playerName(player) {
+    return `${player.first_name} ${player.last_name}`;
 }
 
 function renderLastGame(game) {
-    const playerA = `${game.player_a.first_name} ${game.player_a.last_name}`;
-    const playerB = `${game.player_b.first_name} ${game.player_b.last_name}`;
-    const winnerIsA = game.winner_id === game.player_a.id;
+    lastGame = game;
+    showErrors("#last-game-errors", []);
 
+    if (game === null) {
+        $("#last-game .last-game-result").text("No games yet.");
+        $("#last-game .last-game-info").text("");
+        $("#last-game .last-game-actions").empty();
+        return;
+    }
+
+    const winnerIsA = game.winner_id === game.player_a.id;
     $("#last-game .last-game-result").html(
-        `<span class="${winnerIsA ? "winner" : ""}">${playerA}</span>
+        `<span class="${winnerIsA ? "winner" : ""}">${playerName(game.player_a)}</span>
          ${game.goals_a} : ${game.goals_b}
-         <span class="${winnerIsA ? "" : "winner"}">${playerB}</span>`
+         <span class="${winnerIsA ? "" : "winner"}">${playerName(game.player_b)}</span>`
     );
 
     const date = new Date(game.played_at).toLocaleString("de-CH", {
         day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit",
     });
     $("#last-game .last-game-info").text(`${date} · Elo ±${game.elo_change}`);
+
+    $("#last-game .last-game-actions").html(
+        `<button type="button" class="edit-button" id="edit-game">Edit</button>
+         <button type="button" class="danger-button" id="delete-game">Delete</button>`
+    );
 }
 
-$("#player-form").on("submit", function (event) {
-    event.preventDefault();
+$("#last-game").on("click", "#edit-game", function () {
+    $("#last-game .last-game-result").html(
+        `${playerName(lastGame.player_a)}
+         <input type="number" id="edit-goals-a" min="0" max="10" value="${lastGame.goals_a}">
+         :
+         <input type="number" id="edit-goals-b" min="0" max="10" value="${lastGame.goals_b}">
+         ${playerName(lastGame.player_b)}`
+    );
+    $("#last-game .last-game-actions").html(
+        `<button type="button" class="submit-button" id="save-game">Save</button>
+         <button type="button" class="edit-button" id="cancel-edit">Cancel</button>`
+    );
 });
+
+$("#last-game").on("click", "#save-game", function () {
+    const result = {
+        goals_a: numberOrNull($("#edit-goals-a").val()),
+        goals_b: numberOrNull($("#edit-goals-b").val()),
+    };
+
+    sendJson("PUT", `/api/games/${lastGame.id}`, result)
+        .done(function (game) {
+            renderLastGame(game);
+            fetchRanking();
+        })
+        .fail(function (xhr) {
+            showErrors("#last-game-errors", [errorMessage(xhr)]);
+        });
+});
+
+$("#last-game").on("click", "#cancel-edit", function () {
+    renderLastGame(lastGame);
+});
+
+$("#last-game").on("click", "#delete-game", function () {
+    $("#last-game .last-game-actions").html(
+        `<span class="confirm-text">Delete this game?</span>
+         <button type="button" class="danger-button" id="confirm-delete">Yes, delete</button>
+         <button type="button" class="edit-button" id="cancel-delete">Cancel</button>`
+    );
+});
+
+$("#last-game").on("click", "#confirm-delete", function () {
+    sendJson("DELETE", `/api/games/${lastGame.id}`)
+        .done(function () {
+            fetchLastGame();
+            fetchRanking();
+        })
+        .fail(function (xhr) {
+            showErrors("#last-game-errors", [errorMessage(xhr)]);
+        });
+});
+
+$("#last-game").on("click", "#cancel-delete", function () {
+    renderLastGame(lastGame);
+});
+
 
 $(document).ready(function () {
     fetchRanking();
