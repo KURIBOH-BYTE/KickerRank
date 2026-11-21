@@ -1,4 +1,5 @@
 from business.departments import DEPARTMENTS, is_valid_department
+from business.dtos import to_player_dto
 from business.errors import BusinessError
 from persistence.entities import Player
 
@@ -10,7 +11,10 @@ class PlayerService:
         self.players = players
 
     def ranking(self):
-        return self.players.all_by_elo()
+        result = []
+        for player in self.players.all_by_elo():
+            result.append(to_player_dto(player))
+        return result
 
     def create_player(self, first_name, last_name, department):
         first_name = first_name.strip()
@@ -27,7 +31,7 @@ class PlayerService:
 
         player = self.players.add(Player(first_name=first_name, last_name=last_name, department=department))
         self.players.save()
-        return player
+        return to_player_dto(player)
 
 
 def check_name(name, label):

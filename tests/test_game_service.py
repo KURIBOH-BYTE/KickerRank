@@ -1,6 +1,7 @@
 import pytest
 
 from business.errors import BusinessError
+from business.dtos import GameDTO, PlayerDTO
 from business.game_service import GameService, loser, winner
 from persistence.data_access import GameRepository, PlayerRepository
 from persistence.entities import Game, Player
@@ -55,7 +56,7 @@ def test_spiel_speichert_werte_vor_dem_spiel(service, players):
 
     assert game.id is not None
     assert (game.elo_a_before, game.elo_b_before, game.elo_change) == (1200, 1200, 16)
-    assert winner(game) is anna
+    assert game.winner_id == anna.id
 
 
 def test_gegen_sich_selbst_gibt_fehler(service, players):
@@ -114,11 +115,11 @@ def test_korrigieren_dreht_sieger(service, players):
     anna, tim = anna_and_tim(players)
     game = service.create_game(anna.id, tim.id, 10, 7)
 
-    service.update_game(game.id, 7, 10)
+    game = service.update_game(game.id, 7, 10)
 
     assert (anna.elo, tim.elo) == (1184, 1216)
     assert (game.goals_a, game.goals_b, game.elo_change) == (7, 10, 16)
-    assert winner(game) is tim
+    assert game.winner_id == tim.id
 
 
 def test_korrigieren_aendert_anzahl_spiele_nicht(service, players):
@@ -195,3 +196,13 @@ def test_gewinner_und_verlierer():
 
     assert (winner(a_wins), loser(a_wins)) == (anna, tim)
     assert (winner(b_wins), loser(b_wins)) == (tim, anna)
+
+
+def test_service_gibt_dtos_zurueck(service, players):
+    anna, tim = anna_and_tim(players)
+
+    game = service.create_game(anna.id, tim.id, 10, 7)
+
+    assert isinstance(game, GameDTO)
+    assert isinstance(game.player_a, PlayerDTO)
+    assert isinstance(service.last_game(), GameDTO)
