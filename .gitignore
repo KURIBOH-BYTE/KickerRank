@@ -5,8 +5,10 @@ __pycache__/
 venv/
 .pytest_cache/
 
-# Lokale Datenbank (wird beim Start automatisch erstellt)
-kicker.db
+# Zugangsdaten (nur die Vorlage .env.example gehört ins Repository)
+.env
+.env.*
+!.env.example
 
 # Editor / macOS
 .vscode/

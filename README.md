@@ -21,9 +21,10 @@ Projektarbeit im Modul *Webbasierte Anwendungen*, FHNW, HS2026.
 9. [REST-API](#rest-api)
 10. [Testen](#testen)
 11. [Designentscheidungen](#designentscheidungen)
-12. [Bezug zu den Kursunterlagen](#bezug-zu-den-kursunterlagen)
-13. [Mögliche Erweiterungen](#mögliche-erweiterungen)
-14. [Quellen und Hilfsmittel](#quellen-und-hilfsmittel)
+12. [Sicherheit](#sicherheit)
+13. [Bezug zu den Kursunterlagen](#bezug-zu-den-kursunterlagen)
+14. [Mögliche Erweiterungen](#mögliche-erweiterungen)
+15. [Quellen und Hilfsmittel](#quellen-und-hilfsmittel)
 
 ---
 
@@ -106,11 +107,23 @@ Alternativ `docs/setup.sql` in MySQL Workbench öffnen und als root ausführen.
 
 **3. Verbindung**
 
-Die Verbindung steht in `config.py`:
+`config.py` liest die Zugangsdaten aus Umgebungsvariablen bzw. aus einer Datei `.env`. Ohne `.env` gelten die Werte aus `docs/setup.sql` (Benutzer `kicker` auf `localhost`), es ist also nichts weiter zu tun.
 
-```python
-DATABASE_URL = "mysql+pymysql://kicker:kicker@localhost:3306/kickerrank"
+Andere Zugangsdaten (z. B. ein anderer Port oder ein anderes Passwort) werden in `.env` eingetragen, nicht im Code:
+
+```bash
+cp .env.example .env     # Vorlage kopieren, dann .env anpassen
 ```
+
+```
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=kicker
+DB_PASSWORD=kicker
+DB_NAME=kickerrank
+```
+
+`.env` steht in `.gitignore` und gelangt nie ins Repository. Nur die Vorlage `.env.example` ist versioniert.
 
 Die automatischen Tests brauchen **keinen** MySQL-Server, sie verwenden eine SQLite-Datenbank im Arbeitsspeicher.
 
@@ -132,8 +145,9 @@ Die Ordner entsprechen den Schichten aus der Architekturübersicht der Vorlesung
 ```
 KickerRank/
 ├── main.py                     # Startpunkt: FastAPI-App, Router, Fehlerbehandlung, Demo-Daten beim Start
-├── config.py                   # Einstellungen, z. B. DATABASE_URL für MySQL
-├── requirements.txt            # Abhängigkeiten (FastAPI, Uvicorn, SQLAlchemy, PyMySQL, pytest, httpx)
+├── config.py                   # Zugangsdaten zur Datenbank aus .env bzw. Umgebungsvariablen
+├── .env.example                # Vorlage für .env (die echte .env ist nicht im Repository)
+├── requirements.txt            # Abhängigkeiten (FastAPI, Uvicorn, SQLAlchemy, PyMySQL, python-dotenv, pytest, httpx)
 ├── README.md                   # Diese Beschreibung
 │
 ├── docs/                       # Dokumentation, setup.sql für MySQL
@@ -376,7 +390,7 @@ Content-Type: application/json
 - **Validierung nur im Business Layer:** Alle Regeln (Pflichtfelder, Längen, erlaubte Werte, Duplikate, Spielregeln) werden ausschliesslich im Business Layer geprüft und bei Verletzung als `BusinessError` gemeldet, den der Service Layer in HTTP 400 übersetzt. Das Frontend prüft bewusst nichts selbst, sondern zeigt die Meldungen des Servers an. So liegt jede Regel an genau einer Stelle, kann nicht über den Browser umgangen werden und kann nicht an zwei Orten auseinanderlaufen. Pydantic prüft im Service Layer nur das Format (Datentypen, Pflichtfelder). Eine zusätzliche Prüfung im Browser wurde verworfen: Sie hätte nur eine etwas schnellere Rückmeldung gebracht, aber jede Regel doppelt (in Python und JavaScript) erfordert.
 - **Demo-Daten über die Services:** Beim ersten Start legt `business/db_entries.py` 6 Spieler und 12 Spiele an, und zwar über `PlayerService` und `GameService`, nicht direkt in die Datenbank. Damit gelten für die Demo-Daten dieselben Regeln wie für echte Eingaben, und das Elo wird vom GameService berechnet statt von Hand eingetragen. Die Datei liegt im Business Layer, weil sie die Services benutzt (die Persistenzschicht darf den Business Layer nicht kennen).
 - **Repositories (Data Access):** Alle Abfragen liegen in der Persistenzschicht. Der Business Layer enthält kein SQL.
-- **MySQL gemäss Skript:** Die Daten liegen wie in den Kursunterlagen vorgesehen in MySQL (Treiber `pymysql`). Dank SQLAlchemy steckt die Datenbank nur in einer Zeile (`DATABASE_URL` in `config.py`).
+- **MySQL gemäss Skript:** Die Daten liegen wie in den Kursunterlagen vorgesehen in MySQL (Treiber `pymysql`). Dank SQLAlchemy steckt die Wahl der Datenbank nur in `config.py`.
 - **Tests mit SQLite im Arbeitsspeicher:** Die automatischen Tests laufen ohne MySQL-Server, sind schnell und starten jedes Mal mit einer leeren Datenbank.
 - **Grenze des Modells:** 2 vs 2 würde weitere Spalten oder eine dritte Tabelle (Spielteilnahme) erfordern.
 - **Responsive Design für Handy und Desktop:** Die Oberfläche ist bewusst so gebaut, dass sie auf allen Bildschirmgrössen funktioniert:
@@ -386,6 +400,20 @@ Content-Type: application/json
   - Eine **Media Query** (`max-width: 500px`) verkleinert Titel und Abstände auf dem Handy.
   - **Prozentwerte für Abstände wurden verworfen**, weil sie sich nach der Breite des Elternelements richten und dadurch auf grossen Bildschirmen zu gross und auf dem Handy zu klein werden.
 - **Sprache:** Code (Variablen, Funktionen, Tabellen) und Oberfläche sind auf **Englisch**, die Dokumentation (README, Tickets, Beschreibung) auf **Deutsch**, weil Aufgabenstellung und Bewertung deutschsprachig sind.
+
+---
+
+## Sicherheit
+
+Umgesetzt nach *Datenbanken, Kapitel 11: Datenbankanbindung mit Python Teil 1* (Boeh, 2026) und der Übung «SQL Injection».
+
+| Massnahme | Umsetzung |
+|---|---|
+| **Keine SQL Injection** | Kein SQL wird aus Benutzereingaben zusammengesetzt (kein f-String, kein `text(...)`). Alle Abfragen laufen über SQLAlchemy (`select(...).where(Player.first_name == first_name)`), das die Werte wie die Platzhalter `%s` eines Prepared Statements getrennt von der Abfrage an die Datenbank schickt. |
+| **Zugangsdaten nicht im Code** | `config.py` liest Host, Port, Benutzer, Passwort und Datenbank aus Umgebungsvariablen bzw. `.env` (wie in der Übung, mit `python-dotenv`). `.env` steht in `.gitignore`, versioniert ist nur die Vorlage `.env.example`. Im Code stehen als Standardwerte nur die öffentlichen Werte des Projektbenutzers `kicker` aus `docs/setup.sql`, kein persönliches Passwort. Die URL wird mit `URL.create` gebaut, damit auch Passwörter mit Sonderzeichen wie `#`, `@` oder `?` funktionieren. |
+| **Minimale Rechte** | Die App verbindet sich nie als `root`, sondern als `kicker`. Dieser Benutzer gilt nur für `localhost`, nur für die Datenbank `kickerrank` und hat nur die nötigen Rechte: `SELECT, INSERT, UPDATE, DELETE` für die Daten und `CREATE, REFERENCES`, um die Tabellen beim ersten Start anzulegen. Er darf z. B. keine Tabellen löschen (`DROP`) und keine Benutzer verwalten. |
+| **Verbindungen schliessen** | `get_session()` schliesst die Session in `finally`, auch bei einem Fehler. Beim Start wird `with SessionLocal() as session` verwendet. |
+| **Eingaben prüfen** | Pydantic prüft im Service Layer Format und Datentypen, der Business Layer prüft alle Regeln (siehe Designentscheidungen). |
 
 ---
 
@@ -434,6 +462,7 @@ Bewusste Abweichungen:
 _Nach den Vorgaben der FHNW für schriftliche Arbeiten ergänzen._
 
 - Schaaf, M. (2026). *Webbasierte Anwendungen, Block 3 – Einheit 1: Architekturübersicht und erster Teil Präsentationsschicht.* FHNW.
+- Boeh, R. (2026). *Datenbanken, Kapitel 11: Datenbankanbindung mit Python Teil 1* und Übung «SQL Injection». FHNW.
 - Boeh, R. (2026). *Datenbanken, Kapitel 12: Datenbankanbindung mit Python Teil 2.* FHNW.
 - FastAPI-Dokumentation: <https://fastapi.tiangolo.com/>
 - SQLAlchemy-Dokumentation: <https://docs.sqlalchemy.org/>
