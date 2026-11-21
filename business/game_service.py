@@ -94,8 +94,20 @@ def check_result(goals_a, goals_b):
         raise BusinessError(f"Exactly one player must have {WINNING_GOALS} goals.")
 
 
+def winner(game):
+    if game.goals_a > game.goals_b:
+        return game.player_a
+    return game.player_b
+
+
+def loser(game):
+    if winner(game) is game.player_a:
+        return game.player_b
+    return game.player_a
+
+
 def adjust_elo(game):
-    change = rating_change(game.winner.elo, game.loser.elo)
+    change = rating_change(winner(game).elo, loser(game).elo)
     game.elo_change = change
-    game.winner.elo += change
-    game.loser.elo -= change
+    winner(game).elo += change
+    loser(game).elo -= change

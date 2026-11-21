@@ -1,7 +1,7 @@
 import pytest
 
 from business.errors import BusinessError
-from business.game_service import GameService
+from business.game_service import GameService, loser, winner
 from persistence.data_access import GameRepository, PlayerRepository
 from persistence.entities import Game, Player
 
@@ -55,7 +55,7 @@ def test_spiel_speichert_werte_vor_dem_spiel(service, players):
 
     assert game.id is not None
     assert (game.elo_a_before, game.elo_b_before, game.elo_change) == (1200, 1200, 16)
-    assert game.winner is anna
+    assert winner(game) is anna
 
 
 def test_gegen_sich_selbst_gibt_fehler(service, players):
@@ -118,7 +118,7 @@ def test_korrigieren_dreht_sieger(service, players):
 
     assert (anna.elo, tim.elo) == (1184, 1216)
     assert (game.goals_a, game.goals_b, game.elo_change) == (7, 10, 16)
-    assert game.winner is tim
+    assert winner(game) is tim
 
 
 def test_korrigieren_aendert_anzahl_spiele_nicht(service, players):
@@ -184,3 +184,14 @@ def test_altes_spiel_korrigieren_gibt_fehler(service, players):
 def test_unbekanntes_spiel_gibt_fehler(service):
     with pytest.raises(BusinessError, match="does not exist"):
         service.delete_game(999)
+
+
+def test_gewinner_und_verlierer():
+    anna = Player(first_name="Anna", last_name="Keller", department="HR")
+    tim = Player(first_name="Tim", last_name="Brunner", department="HR")
+
+    a_wins = Game(player_a=anna, player_b=tim, goals_a=10, goals_b=7)
+    b_wins = Game(player_a=anna, player_b=tim, goals_a=4, goals_b=10)
+
+    assert (winner(a_wins), loser(a_wins)) == (anna, tim)
+    assert (winner(b_wins), loser(b_wins)) == (tim, anna)

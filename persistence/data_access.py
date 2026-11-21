@@ -1,4 +1,5 @@
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 
 from persistence.entities import Game, Player
 
@@ -24,7 +25,11 @@ class PlayerRepository:
         return player
 
     def save(self):
-        self.session.commit()
+        try:
+            self.session.commit()
+        except IntegrityError:
+            self.session.rollback()
+            raise
 
 
 class GameRepository:
@@ -47,4 +52,8 @@ class GameRepository:
         self.session.delete(game)
 
     def save(self):
-        self.session.commit()
+        try:
+            self.session.commit()
+        except IntegrityError:
+            self.session.rollback()
+            raise

@@ -34,19 +34,3 @@ class Game(Base):
 
     player_a: Mapped[Player] = relationship(foreign_keys=[player_a_id])
     player_b: Mapped[Player] = relationship(foreign_keys=[player_b_id])
-
-    @property
-    def winner(self) -> Player:
-        if self.goals_a > self.goals_b:
-            return self.player_a
-        return self.player_b
-
-    @property
-    def winner_id(self) -> int:
-        return self.winner.id
-
-    @property
-    def loser(self) -> Player:
-        if self.winner is self.player_a:
-            return self.player_b
-        return self.player_a

@@ -38,17 +38,6 @@ def test_spiel_mit_zwei_spielern(session):
     assert saved.played_at is not None
 
 
-def test_gewinner_property(session):
-    max_ = create_player(session, "Max")
-    lisa = create_player(session, "Lisa")
-
-    a_wins = Game(player_a=max_, player_b=lisa, goals_a=10, goals_b=7)
-    b_wins = Game(player_a=max_, player_b=lisa, goals_a=4, goals_b=10)
-
-    assert a_wins.winner is max_
-    assert b_wins.winner is lisa
-
-
 def test_name_ist_eindeutig(session):
     create_player(session, "Max", "Muster")
 
@@ -61,14 +50,3 @@ def test_gleicher_vorname_ist_erlaubt(session):
     create_player(session, "Max", "Meier")
 
     assert session.query(Player).count() == 2
-
-
-def test_verlierer_property(session):
-    nina = create_player(session, "Nina")
-    lisa = create_player(session, "Lisa")
-
-    a_wins = Game(player_a=nina, player_b=lisa, goals_a=10, goals_b=7)
-    b_wins = Game(player_a=nina, player_b=lisa, goals_a=4, goals_b=10)
-
-    assert a_wins.loser is lisa
-    assert b_wins.loser is nina
