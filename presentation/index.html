@@ -52,6 +52,8 @@
           </div>
         </div>
         <button type="submit" class="submit-button">Add player</button>
+        <ul id="player-errors" class="errors"></ul>
+        <p id="player-success" class="success"></p>
       </form>
     </section>
 
@@ -89,10 +91,8 @@
       <div id="last-game" class="card">
         <p class="last-game-result"></p>
         <p class="last-game-info"></p>
-        <div class="last-game-actions">
-          <button type="button" class="secondary-button">Correct</button>
-          <button type="button" class="danger-button">Delete</button>
-        </div>
+        <div class="last-game-actions"></div>
+        <ul id="last-game-errors" class="errors"></ul>
       </div>
     </section>
   </main>

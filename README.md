@@ -21,8 +21,9 @@ Projektarbeit im Modul *Webbasierte Anwendungen*, FHNW, HS2026.
 9. [REST-API](#rest-api)
 10. [Testen](#testen)
 11. [Designentscheidungen](#designentscheidungen)
-12. [Mögliche Erweiterungen](#mögliche-erweiterungen)
-13. [Quellen und Hilfsmittel](#quellen-und-hilfsmittel)
+12. [Bezug zu den Kursunterlagen](#bezug-zu-den-kursunterlagen)
+13. [Mögliche Erweiterungen](#mögliche-erweiterungen)
+14. [Quellen und Hilfsmittel](#quellen-und-hilfsmittel)
 
 ---
 
@@ -364,7 +365,7 @@ Content-Type: application/json
   - **Abteilung als Text** statt eigener Tabelle. Tippfehler verhindert eine feste Liste im Business Layer, die im GUI als Dropdown erscheint.
   - **`elo` und `anzahl_spiele` beim Spieler** sind redundant, weil sie sich aus allen Spielen berechnen liessen. Sie werden gespeichert, damit die Rangliste mit einer einfachen Abfrage geladen werden kann.
   - **`elo_a_vorher`, `elo_b_vorher` und `elo_aenderung` im Spiel** machen das Korrigieren und Löschen ohne Neuberechnung aller Spiele möglich.
-- **Der Gewinner wird nicht gespeichert.** Er ergibt sich aus den Toren, so können sich keine Daten widersprechen.
+- **Der Gewinner wird nicht gespeichert.** Er ergibt sich aus den Toren, so können sich keine Daten widersprechen. Berechnet wird er im Business Layer (`winner()` und `loser()` in `business/game_service.py`), nicht in der Entität: Gemäss Kursunterlagen enthalten Datenobjekte keine Geschäftslogik, und «mehr Tore gewinnt» ist eine Spielregel.
 - **DTOs statt Entities nach oben:** Der Service Layer kennt keine SQLAlchemy-Objekte. Änderungen an der Datenbank wirken sich nicht direkt auf das API aus.
 - **Validierung nur im Business Layer:** Alle Regeln (Pflichtfelder, Längen, erlaubte Werte, Duplikate, Spielregeln) werden ausschliesslich im Business Layer geprüft und bei Verletzung als `BusinessError` gemeldet, den der Service Layer in HTTP 400 übersetzt. Das Frontend prüft bewusst nichts selbst, sondern zeigt die Meldungen des Servers an. So liegt jede Regel an genau einer Stelle, kann nicht über den Browser umgangen werden und kann nicht an zwei Orten auseinanderlaufen. Pydantic prüft im Service Layer nur das Format (Datentypen, Pflichtfelder). Eine zusätzliche Prüfung im Browser wurde verworfen: Sie hätte nur eine etwas schnellere Rückmeldung gebracht, aber jede Regel doppelt (in Python und JavaScript) erfordert.
 - **Repositories (Data Access):** Alle Abfragen liegen in der Persistenzschicht. Der Business Layer enthält kein SQL.
@@ -381,6 +382,34 @@ Content-Type: application/json
 
 ---
 
+## Bezug zu den Kursunterlagen
+
+Die Persistenzschicht folgt dem Aufbau aus *Datenbanken, Kapitel 12: Datenbankanbindung mit Python Teil 2* (Boeh, 2026). Was zusätzlich zur Architektur aus *Webbasierte Anwendungen* passt, wurde übernommen:
+
+| Konzept aus den Folien | Folie | Umsetzung im Projekt |
+|---|---|---|
+| Object Relational Mapping: Klasse ↔ Tabelle | 4–7 | `Player` und `Game` in `persistence/entities.py` |
+| Beziehung einer Tabelle zu sich selbst (`PersPers`) | 7 | `game` verweist zweimal auf `player` (`player_a_id`, `player_b_id`). Anders als `PersPers` mit eigener `id`, weil dieselben zwei Spieler mehrmals gegeneinander spielen und jedes Spiel eigene Daten hat |
+| Objektidentität | 8–9 | Kein eigenes `__eq__`/`__hash__`: Die Session stellt sicher, dass es jeden Datensatz pro Session nur als ein Objekt gibt |
+| INSERT vs. UPDATE | 10 | Entscheidet die Session: neue Objekte (`add`) werden eingefügt, geänderte geladene Objekte aktualisiert |
+| 3-Schichten-Architektur: Datenobjekt ohne Logik, Data Access ohne Geschäftslogik | 12 | Entitäten ohne Geschäftslogik, Abfragen nur in `persistence/data_access.py`, Regeln nur im Business Layer |
+| Repository Pattern | 13 | `PlayerRepository`, `GameRepository` |
+| ORM-Klassen mit `Mapped` und `mapped_column` | 16 | `persistence/entities.py` |
+| Zugriff über ORM-Modelle mit `select(...)` | 17 | alle Abfragen in den Repositories, kein textuelles SQL |
+| SQL Injection | 18 | Kein textuelles SQL, alle Werte über SQLAlchemy gebunden |
+| Session und `commit`, Arbeitspakete (Unit of Work) | 19–20 | `save()` in den Repositories; ein `save()` pro Arbeitspaket |
+| Lazy Loading bei `relationship()` | 22 | `game.player_a` wird erst bei Zugriff geladen |
+| Schema-Erstellung mit `inspect` und `create_all` | 25 | `init_db()` in `persistence/database.py` gibt beim Start die vorhandenen Tabellen aus und legt fehlende an |
+
+Bewusste Abweichungen:
+
+- **Session im Konstruktor statt pro Methode:** Auf Folie 13 erhält jede Repository-Methode die Session als Parameter. Hier erhält das Repository sie einmal im Konstruktor. So passt es zur Verknüpfung der Komponenten mit `Depends` (Webbasierte Anwendungen, Block 3), und der Business Layer muss die Session nicht kennen.
+- **Methodennamen:** `find`, `find_by_name`, `all_by_elo`, `add` entsprechen `readById`, `readPersonByName`, `readAll` und `create` aus den Folien (Python-Schreibweise, an die Fachlichkeit angepasst).
+- **Kein `rollback` bei `IntegrityError` (Folien 13, 19, 20):** Doppelte Namen fängt bereits der Business Layer mit einer verständlichen Meldung ab. Eine zweite Behandlung in der Persistenzschicht wäre doppelt. Schlägt ein `commit` trotzdem fehl, wird die Transaktion beim Schliessen der Session (`get_session`) automatisch verworfen.
+- **Kein Datenbankmigrationstool (Alembic, Folie 26):** Für den Projektumfang ohne Schemaversionen nicht nötig. Siehe Mögliche Erweiterungen.
+
+---
+
 ## Mögliche Erweiterungen
 
 - Spielverlauf aller Spiele
@@ -389,6 +418,7 @@ Content-Type: application/json
 - Spielerprofil mit Elo-Verlaufsdiagramm
 - Abteilungs-Rangliste (Durchschnitts-Elo pro Abteilung)
 - Höherer K-Faktor für neue Spieler, Ränge (Bronze, Silber, Gold)
+- Schemaversionen und Migrationen mit Alembic
 
 ---
 
@@ -397,6 +427,7 @@ Content-Type: application/json
 _Nach den Vorgaben der FHNW für schriftliche Arbeiten ergänzen._
 
 - Schaaf, M. (2026). *Webbasierte Anwendungen, Block 3 – Einheit 1: Architekturübersicht und erster Teil Präsentationsschicht.* FHNW.
+- Boeh, R. (2026). *Datenbanken, Kapitel 12: Datenbankanbindung mit Python Teil 2.* FHNW.
 - FastAPI-Dokumentation: <https://fastapi.tiangolo.com/>
 - SQLAlchemy-Dokumentation: <https://docs.sqlalchemy.org/>
 - jQuery-Dokumentation: <https://api.jquery.com/>

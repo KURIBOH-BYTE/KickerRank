@@ -265,7 +265,7 @@ h3 {
   gap: 0.5rem;
 }
 
-.secondary-button,
+.edit-button,
 .danger-button {
   padding: 0.5rem 1rem;
   border-radius: 6px;
@@ -274,13 +274,27 @@ h3 {
   cursor: pointer;
 }
 
-.secondary-button {
-  border: 1px solid #1b5e20;
-  color: #1b5e20;
+.edit-button {
+  border: 1px solid #6b6b6b;
+  color: #3a3a3a;
 }
 
 .danger-button {
   border: 1px solid #b3261e;
+  color: #b3261e;
+}
+
+.last-game-result input {
+  width: 4rem;
+  padding: 0.3rem;
+  border: 1px solid #cfd8dc;
+  border-radius: 6px;
+  font-size: 1.2rem;
+  text-align: center;
+}
+
+.confirm-text {
+  align-self: center;
   color: #b3261e;
 }
 

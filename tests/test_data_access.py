@@ -107,3 +107,4 @@ def test_loeschen(session):
 
     assert games.last() is None
     assert len(players.all_by_elo()) == 2
+
