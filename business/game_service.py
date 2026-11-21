@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from business.dtos import GameDTO, to_player_dto
 from business.elo import rating_change
 from business.errors import BusinessError, NotFoundError
@@ -11,11 +13,12 @@ class GameService:
         self.players = players
         self.games = games
 
-    def create_game(self, player_a_id, player_b_id, goals_a, goals_b):
+    def create_game(self, player_a_id, player_b_id, goals_a, goals_b, played_at=None):
         player_a, player_b = self._get_players(player_a_id, player_b_id)
         check_result(goals_a, goals_b)
 
         game = Game(
+            played_at=played_at or datetime.now(),
             player_a=player_a,
             player_b=player_b,
             goals_a=goals_a,

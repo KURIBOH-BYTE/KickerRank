@@ -1,5 +1,5 @@
-from business.elo import START_RATING, rating_change
-from persistence.db_entries import DEMO_GAMES, DEMO_PLAYERS, insert_db_entries
+from business.db_entries import DEMO_GAMES, DEMO_PLAYERS, insert_db_entries
+from business.elo import START_RATING
 from persistence.entities import Game, Player
 
 
@@ -7,7 +7,7 @@ def test_demo_daten_werden_angelegt(session):
     insert_db_entries(session)
 
     assert session.query(Player).count() == len(DEMO_PLAYERS) == 6
-    assert session.query(Game).count() == len(DEMO_GAMES)
+    assert session.query(Game).count() == len(DEMO_GAMES) == 12
 
 
 def test_demo_daten_nur_einmal(session):
@@ -15,6 +15,7 @@ def test_demo_daten_nur_einmal(session):
     insert_db_entries(session)
 
     assert session.query(Player).count() == 6
+    assert session.query(Game).count() == 12
 
 
 def test_jeder_spieler_hat_gespielt(session):
@@ -25,21 +26,24 @@ def test_jeder_spieler_hat_gespielt(session):
         assert player.elo != START_RATING
 
 
-def test_demo_daten_passen_zur_elo_berechnung():
-    elo = {player[0]: START_RATING for player in DEMO_PLAYERS}
-    games = {player[0]: 0 for player in DEMO_PLAYERS}
+def test_elo_wird_vom_game_service_berechnet(session):
+    insert_db_entries(session)
 
-    for _, a, b, goals_a, goals_b, elo_a_before, elo_b_before, elo_change in DEMO_GAMES:
-        assert (elo_a_before, elo_b_before) == (elo[a], elo[b])
-        if goals_a > goals_b:
-            assert elo_change == rating_change(elo[a], elo[b])
-            elo[a], elo[b] = elo[a] + elo_change, elo[b] - elo_change
-        else:
-            assert elo_change == rating_change(elo[b], elo[a])
-            elo[a], elo[b] = elo[a] - elo_change, elo[b] + elo_change
-        games[a] += 1
-        games[b] += 1
+    ranking = session.query(Player).order_by(Player.elo.desc()).all()
 
-    for first_name, _, _, final_elo, games_played in DEMO_PLAYERS:
-        assert elo[first_name] == final_elo
-        assert games[first_name] == games_played
+    assert [(player.first_name, player.elo, player.games_played) for player in ranking] == [
+        ("Lukas", 1260, 4),
+        ("Sarah", 1230, 4),
+        ("Elena", 1199, 4),
+        ("Giovanni", 1185, 3),
+        ("Tim", 1173, 4),
+        ("Anna", 1153, 5),
+    ]
+
+
+def test_spiele_behalten_ihr_datum(session):
+    insert_db_entries(session)
+
+    last = session.query(Game).order_by(Game.id.desc()).first()
+
+    assert last.played_at.strftime("%d.%m.%Y %H:%M") == "13.11.2026 12:05"

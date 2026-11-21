@@ -6,9 +6,9 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
+from business.db_entries import insert_db_entries
 from business.errors import BusinessError, NotFoundError
 from persistence.database import SessionLocal, init_db
-from persistence.db_entries import insert_db_entries
 from service import game_endpoints, player_endpoints
 
 
