@@ -1,3 +1,6 @@
+from datetime import datetime
+
+from business.dtos import GameDTO, to_player_dto
 from business.elo import rating_change
 from business.errors import BusinessError, NotFoundError
 from persistence.entities import Game
@@ -10,11 +13,12 @@ class GameService:
         self.players = players
         self.games = games
 
-    def create_game(self, player_a_id, player_b_id, goals_a, goals_b):
+    def create_game(self, player_a_id, player_b_id, goals_a, goals_b, played_at=None):
         player_a, player_b = self._get_players(player_a_id, player_b_id)
         check_result(goals_a, goals_b)
 
         game = Game(
+            played_at=played_at or datetime.now(),
             player_a=player_a,
             player_b=player_b,
             goals_a=goals_a,
@@ -30,7 +34,7 @@ class GameService:
 
         self.games.add(game)
         self.games.save()
-        return game
+        return to_game_dto(game)
 
     def update_game(self, game_id, goals_a, goals_b):
         game = self._get_latest_game(game_id)
@@ -41,11 +45,10 @@ class GameService:
 
         game.player_a.elo = game.elo_a_before
         game.player_b.elo = game.elo_b_before
-        
         adjust_elo(game)
 
         self.games.save()
-        return game
+        return to_game_dto(game)
 
     def delete_game(self, game_id):
         game = self._get_latest_game(game_id)
@@ -60,7 +63,10 @@ class GameService:
         self.games.save()
 
     def last_game(self):
-        return self.games.last()
+        game = self.games.last()
+        if game is None:
+            return None
+        return to_game_dto(game)
 
     def _get_latest_game(self, game_id):
         game = self.games.find(game_id)
@@ -111,3 +117,20 @@ def adjust_elo(game):
     game.elo_change = change
     winner(game).elo += change
     loser(game).elo -= change
+
+
+def to_game_dto(game):
+    return GameDTO(
+        id=game.id,
+        played_at=game.played_at,
+        player_a_id=game.player_a_id,
+        player_b_id=game.player_b_id,
+        player_a=to_player_dto(game.player_a),
+        player_b=to_player_dto(game.player_b),
+        goals_a=game.goals_a,
+        goals_b=game.goals_b,
+        elo_a_before=game.elo_a_before,
+        elo_b_before=game.elo_b_before,
+        elo_change=game.elo_change,
+        winner_id=winner(game).id,
+    )

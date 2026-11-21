@@ -128,11 +128,10 @@ Alle Tests liegen im Ordner `tests/`. Die Oberfläche wird zusätzlich von Hand 
 ## Ordnerstruktur
 
 Die Ordner entsprechen den Schichten aus der Architekturübersicht der Vorlesung (Block 3, Abbildung 4).
-Das ist die **Zielstruktur**. Die Dateien entstehen nach und nach mit den Tickets in `planung/`.
 
 ```
 KickerRank/
-├── main.py                     # Startpunkt: FastAPI-App, Router, Fehlerbehandlung
+├── main.py                     # Startpunkt: FastAPI-App, Router, Fehlerbehandlung, Demo-Daten beim Start
 ├── config.py                   # Einstellungen, z. B. DATABASE_URL für MySQL
 ├── requirements.txt            # Abhängigkeiten (FastAPI, Uvicorn, SQLAlchemy, PyMySQL, pytest, httpx)
 ├── README.md                   # Diese Beschreibung
@@ -140,13 +139,14 @@ KickerRank/
 ├── docs/                       # Dokumentation, setup.sql für MySQL
 │
 ├── tests/                      # Tests
+│   ├── conftest.py             #   Fixtures: SQLite-Testdatenbank, Test-Client
 │   ├── test_*.py               #   automatische Tests (pytest)
 │   └── manuelle_tests.md       #   manuelle Testfälle für die Oberfläche
 │
 ├── planung/                    # Backlog und Tickets (BACKLOG.md, tickets/)
 │
 ├── presentation/               # PRESENTATION LAYER (läuft im Browser)
-│   ├── index.html              #   Views: Rangliste, Spiel erfassen
+│   ├── index.html              #   Views: Rangliste, Spieler anlegen, Spiel erfassen, letztes Spiel
 │   ├── css/
 │   │   └── style.css           #   Gestaltung
 │   └── js/
@@ -154,20 +154,22 @@ KickerRank/
 │
 ├── service/                    # WEB/REST SERVICE LAYER (FastAPI)
 │   ├── messages.py             #   Messages: Pydantic-Modelle für JSON-Anfragen und -Antworten
-│   ├── spieler_endpoints.py    #   REST Endpoints: Rangliste, Abteilungen, Spieler anlegen
-│   └── spiel_endpoints.py      #   REST Endpoints: Spiel erfassen, korrigieren, löschen
+│   ├── player_endpoints.py     #   REST Endpoints: Rangliste, Abteilungen, Spieler anlegen
+│   └── game_endpoints.py       #   REST Endpoints: Spiel erfassen, letztes Spiel, korrigieren, löschen
 │
 ├── business/                   # BUSINESS SERVICE LAYER (Geschäftslogik)
-│   ├── dtos.py                 #   Data Transfer Objects: SpielerDTO, SpielDTO
-│   ├── spieler_service.py      #   Business Service: Spieler anlegen, Rangliste
-│   ├── spiel_service.py        #   Business Service: Spiel erfassen, korrigieren, löschen
+│   ├── dtos.py                 #   Data Transfer Objects: PlayerDTO, GameDTO
+│   ├── player_service.py       #   Business Service: Spieler anlegen, Rangliste
+│   ├── game_service.py         #   Business Service: Spiel erfassen, korrigieren, löschen, Gewinner
 │   ├── elo.py                  #   Elo-Berechnung
-│   └── fehler.py               #   GeschaeftsFehler bei verletzten Regeln
+│   ├── departments.py          #   feste Liste der Abteilungen
+│   ├── errors.py               #   BusinessError (400) und NotFoundError (404)
+│   └── db_entries.py           #   Demo-Daten beim ersten Start, über die Services angelegt
 │
 └── persistence/                # PERSISTENCE LAYER (SQLAlchemy)
     ├── database.py             #   Engine, Session, Tabellen anlegen
-    ├── entities.py             #   Domain Entities: Spieler, Spiel
-    └── data_access.py          #   Data Access: SpielerRepository, SpielRepository
+    ├── entities.py             #   Domain Entities: Player, Game
+    └── data_access.py          #   Data Access: PlayerRepository, GameRepository
 ```
 
 ---
@@ -213,7 +215,7 @@ Die Anwendung ist in vier Schichten aufgeteilt. Jede Schicht ruft nur die Schich
 2. **Service:** `spiel_endpoints.spiel_erfassen()` erhält die Daten als Message `SpielErfassen`. FastAPI hat die Datentypen bereits geprüft.
 3. **Business:** `SpielService.spiel_erfassen()` prüft die Regeln, berechnet mit `elo.py` die Punkte und erstellt eine `Spiel`-Entity.
 4. **Persistence:** `SpielRepository` speichert Spiel und beide Spieler in **einer Transaktion**.
-5. Der Business Service gibt ein `SpielDTO` zurück. Der Endpoint wandelt es in die Message `SpielAntwort` (JSON) um.
+5. Der Business Service gibt ein `GameDTO` zurück. Der Endpoint wandelt es in die Message `GameResponse` (JSON) um.
 6. **Presentation:** `main.js` zeigt «Roy +16 (1216), Lisa −16 (1184)» an und lädt die Rangliste neu.
 
 Die Komponenten werden über **Dependency Injection** (`Depends` von FastAPI) verbunden:
@@ -366,8 +368,13 @@ Content-Type: application/json
   - **`elo` und `anzahl_spiele` beim Spieler** sind redundant, weil sie sich aus allen Spielen berechnen liessen. Sie werden gespeichert, damit die Rangliste mit einer einfachen Abfrage geladen werden kann.
   - **`elo_a_vorher`, `elo_b_vorher` und `elo_aenderung` im Spiel** machen das Korrigieren und Löschen ohne Neuberechnung aller Spiele möglich.
 - **Der Gewinner wird nicht gespeichert.** Er ergibt sich aus den Toren, so können sich keine Daten widersprechen. Berechnet wird er im Business Layer (`winner()` und `loser()` in `business/game_service.py`), nicht in der Entität: Gemäss Kursunterlagen enthalten Datenobjekte keine Geschäftslogik, und «mehr Tore gewinnt» ist eine Spielregel.
-- **DTOs statt Entities nach oben:** Der Service Layer kennt keine SQLAlchemy-Objekte. Änderungen an der Datenbank wirken sich nicht direkt auf das API aus.
+- **DTOs statt Entities nach oben:** Der Service Layer kennt keine SQLAlchemy-Objekte. Die Business Services wandeln Entitäten in DTOs (`business/dtos.py`, als `@dataclass`) um und geben nur diese zurück. Die Endpoints wandeln die DTOs in Messages um. Damit gibt es drei Arten von Datenobjekten, je eine pro Schicht (Skript Block 3, Abb. 8):
+  - **Entität** (Persistence, `Player`, `Game`): mit der Datenbank verbunden, Änderungen werden beim `commit` gespeichert.
+  - **DTO** (Business, `PlayerDTO`, `GameDTO`): reine Kopie der Daten als Ergebnis der Geschäftslogik, inklusive berechneter Werte wie `winner_id`. Eine Änderung an einem DTO hat keine Wirkung auf die Datenbank.
+  - **Message** (Service, `PlayerResponse`, `GameResponse` usw.): legt das JSON-Format der API fest und prüft eingehende Daten.
+  Die DTOs sind bewusst `@dataclass` statt Pydantic-Modelle, damit der Business Layer nicht von einer Web-Bibliothek abhängt.
 - **Validierung nur im Business Layer:** Alle Regeln (Pflichtfelder, Längen, erlaubte Werte, Duplikate, Spielregeln) werden ausschliesslich im Business Layer geprüft und bei Verletzung als `BusinessError` gemeldet, den der Service Layer in HTTP 400 übersetzt. Das Frontend prüft bewusst nichts selbst, sondern zeigt die Meldungen des Servers an. So liegt jede Regel an genau einer Stelle, kann nicht über den Browser umgangen werden und kann nicht an zwei Orten auseinanderlaufen. Pydantic prüft im Service Layer nur das Format (Datentypen, Pflichtfelder). Eine zusätzliche Prüfung im Browser wurde verworfen: Sie hätte nur eine etwas schnellere Rückmeldung gebracht, aber jede Regel doppelt (in Python und JavaScript) erfordert.
+- **Demo-Daten über die Services:** Beim ersten Start legt `business/db_entries.py` 6 Spieler und 12 Spiele an, und zwar über `PlayerService` und `GameService`, nicht direkt in die Datenbank. Damit gelten für die Demo-Daten dieselben Regeln wie für echte Eingaben, und das Elo wird vom GameService berechnet statt von Hand eingetragen. Die Datei liegt im Business Layer, weil sie die Services benutzt (die Persistenzschicht darf den Business Layer nicht kennen).
 - **Repositories (Data Access):** Alle Abfragen liegen in der Persistenzschicht. Der Business Layer enthält kein SQL.
 - **MySQL gemäss Skript:** Die Daten liegen wie in den Kursunterlagen vorgesehen in MySQL (Treiber `pymysql`). Dank SQLAlchemy steckt die Datenbank nur in einer Zeile (`DATABASE_URL` in `config.py`).
 - **Tests mit SQLite im Arbeitsspeicher:** Die automatischen Tests laufen ohne MySQL-Server, sind schnell und starten jedes Mal mit einer leeren Datenbank.

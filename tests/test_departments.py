@@ -1,5 +1,5 @@
 from business.departments import DEPARTMENTS, is_valid_department
-from persistence.db_entries import DEMO_PLAYERS
+from business.db_entries import DEMO_PLAYERS
 
 
 def test_es_gibt_fuenf_abteilungen():
@@ -16,5 +16,5 @@ def test_ungueltige_abteilung():
 
 
 def test_demo_spieler_haben_gueltige_abteilungen():
-    for _, _, department, _, _ in DEMO_PLAYERS:
+    for _, _, department in DEMO_PLAYERS:
         assert is_valid_department(department)

@@ -1,5 +1,6 @@
 import pytest
 
+from business.dtos import PlayerDTO
 from business.errors import BusinessError
 from business.player_service import PlayerService
 from persistence.data_access import PlayerRepository
@@ -49,7 +50,23 @@ def test_doppelter_name_gibt_fehler(service):
 def test_rangliste_nach_elo(service):
     anna = service.create_player("Anna", "Keller", "HR")
     tim = service.create_player("Tim", "Brunner", "Support")
-    anna.elo = 1250
+    service.players.find(anna.id).elo = 1250
     service.players.save()
 
-    assert service.ranking() == [anna, tim]
+    assert [player.id for player in service.ranking()] == [anna.id, tim.id]
+
+
+def test_service_gibt_dtos_zurueck(service):
+    player = service.create_player("Anna", "Keller", "HR")
+
+    assert isinstance(player, PlayerDTO)
+    assert all(isinstance(entry, PlayerDTO) for entry in service.ranking())
+
+
+def test_aenderung_am_dto_aendert_datenbank_nicht(service):
+    player = service.create_player("Anna", "Keller", "HR")
+
+    player.elo = 9999
+    service.players.save()
+
+    assert service.ranking()[0].elo == 1200
