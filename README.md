@@ -397,7 +397,7 @@ Die Persistenzschicht folgt dem Aufbau aus *Datenbanken, Kapitel 12: Datenbankan
 | ORM-Klassen mit `Mapped` und `mapped_column` | 16 | `persistence/entities.py` |
 | Zugriff über ORM-Modelle mit `select(...)` | 17 | alle Abfragen in den Repositories, kein textuelles SQL |
 | SQL Injection | 18 | Kein textuelles SQL, alle Werte über SQLAlchemy gebunden |
-| Session, `commit` und `rollback` bei `IntegrityError` | 19–20 | `save()` in den Repositories; ein `save()` pro Arbeitspaket (Unit of Work) |
+| Session und `commit`, Arbeitspakete (Unit of Work) | 19–20 | `save()` in den Repositories; ein `save()` pro Arbeitspaket |
 | Lazy Loading bei `relationship()` | 22 | `game.player_a` wird erst bei Zugriff geladen |
 | Schema-Erstellung mit `inspect` und `create_all` | 25 | `init_db()` in `persistence/database.py` gibt beim Start die vorhandenen Tabellen aus und legt fehlende an |
 
@@ -405,6 +405,7 @@ Bewusste Abweichungen:
 
 - **Session im Konstruktor statt pro Methode:** Auf Folie 13 erhält jede Repository-Methode die Session als Parameter. Hier erhält das Repository sie einmal im Konstruktor. So passt es zur Verknüpfung der Komponenten mit `Depends` (Webbasierte Anwendungen, Block 3), und der Business Layer muss die Session nicht kennen.
 - **Methodennamen:** `find`, `find_by_name`, `all_by_elo`, `add` entsprechen `readById`, `readPersonByName`, `readAll` und `create` aus den Folien (Python-Schreibweise, an die Fachlichkeit angepasst).
+- **Kein `rollback` bei `IntegrityError` (Folien 13, 19, 20):** Doppelte Namen fängt bereits der Business Layer mit einer verständlichen Meldung ab. Eine zweite Behandlung in der Persistenzschicht wäre doppelt. Schlägt ein `commit` trotzdem fehl, wird die Transaktion beim Schliessen der Session (`get_session`) automatisch verworfen.
 - **Kein Datenbankmigrationstool (Alembic, Folie 26):** Für den Projektumfang ohne Schemaversionen nicht nötig. Siehe Mögliche Erweiterungen.
 
 ---

@@ -1,6 +1,3 @@
-import pytest
-from sqlalchemy.exc import IntegrityError
-
 from persistence.data_access import GameRepository, PlayerRepository
 from persistence.entities import Game, Player
 
@@ -111,13 +108,3 @@ def test_loeschen(session):
     assert games.last() is None
     assert len(players.all_by_elo()) == 2
 
-
-def test_doppelter_name_wird_zurueckgerollt(session):
-    players = PlayerRepository(session)
-    add_player(players, "Anna", "Keller")
-
-    session.add(Player(first_name="Anna", last_name="Keller", department="HR"))
-    with pytest.raises(IntegrityError):
-        players.save()
-
-    assert len(players.all_by_elo()) == 1
